@@ -36,10 +36,15 @@ const InspirationPage: React.FC = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 12, total: 0 });
   const [modalVisible, setModalVisible] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<TrendingVideo | null>(null);
+  const currentVideoRef = useRef<TrendingVideo | null>(null);
   const [currentResource, setCurrentResource] = useState<Resource | null>(null);
   const [resourceLoading, setResourceLoading] = useState(false);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<number | null>(null);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    currentVideoRef.current = currentVideo;
+  }, [currentVideo]);
 
   const stopPolling = () => {
     if (pollingIntervalRef.current) {
@@ -51,6 +56,7 @@ const InspirationPage: React.FC = () => {
   const startPolling = useCallback(() => {
     stopPolling();
     pollingIntervalRef.current = setInterval(async () => {
+      const currentVideo = currentVideoRef.current;
       if (!currentVideo) return;
       try {
         const resource = await resourceApi.getStatus(currentVideo.platform, currentVideo.id);
@@ -63,7 +69,7 @@ const InspirationPage: React.FC = () => {
         console.error('Polling failed, will retry next interval:', error);
       }
     }, 3000);
-  }, [currentVideo]);
+  }, []);
 
   const openDetailModal = async (video: TrendingVideo) => {
     setCurrentVideo(video);
