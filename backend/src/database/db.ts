@@ -1,0 +1,129 @@
+import Database from 'better-sqlite3';
+import path from 'path';
+import fs from 'fs';
+
+const dataDir = path.join(__dirname, '../../../data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const dbPath = path.join(dataDir, 'jigglypuff.db');
+export const db = new Database(dbPath);
+
+export function initDatabase() {
+  const createTables = [
+    `CREATE TABLE IF NOT EXISTS pets (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      avatar TEXT,
+      breed TEXT,
+      age REAL,
+      description TEXT,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS llm_configs (
+      id TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      base_url TEXT NOT NULL,
+      api_key TEXT NOT NULL,
+      model_name TEXT NOT NULL,
+      max_tokens INTEGER,
+      is_default BOOLEAN NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS materials (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      type TEXT NOT NULL,
+      media_type TEXT NOT NULL,
+      url TEXT NOT NULL,
+      cover_url TEXT,
+      tags TEXT,
+      source_platform TEXT,
+      source_original_url TEXT,
+      source_author TEXT,
+      local_path TEXT,
+      file_size INTEGER,
+      description TEXT,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS trending_videos (
+      id TEXT PRIMARY KEY,
+      platform TEXT NOT NULL,
+      title TEXT NOT NULL,
+      author TEXT NOT NULL,
+      cover_url TEXT,
+      video_url TEXT,
+      views INTEGER,
+      likes INTEGER,
+      publish_time DATETIME,
+      tags TEXT,
+      description TEXT,
+      added_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS hot_topics (
+      id TEXT PRIMARY KEY,
+      topic TEXT NOT NULL,
+      description TEXT,
+      related_videos INTEGER,
+      trend TEXT,
+      tags TEXT,
+      summarized_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS creations (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      pet_ids TEXT,
+      material_ids TEXT,
+      status TEXT NOT NULL,
+      content TEXT,
+      plan JSON,
+      sub_agents JSON,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS mcp_configs (
+      id TEXT PRIMARY KEY,
+      platform TEXT NOT NULL,
+      deploy_type TEXT NOT NULL,
+      server_url TEXT NOT NULL,
+      cookie TEXT,
+      enabled BOOLEAN NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS resources (
+      id TEXT PRIMARY KEY,
+      platform TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      original_url TEXT NOT NULL,
+      status TEXT NOT NULL,
+      local_path TEXT,
+      url TEXT,
+      download_attempts INTEGER NOT NULL DEFAULT 0,
+      error TEXT,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    );`
+  ];
+
+  createTables.forEach(sql => {
+    db.exec(sql);
+  });
+
+  console.log('Database initialized successfully');
+}
+
+export function closeDatabase() {
+  db.close();
+}

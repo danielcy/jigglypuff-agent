@@ -1,0 +1,55 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+**/dist
+dist-ssr
+*.local
+
+# Data - SQLite database and downloaded resources
+data/*.db
+data/resources/**/*
+data/uploads/**/*
+!data/.gitkeep
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Testing
+coverage
+*.lcov
+.nyc_output
+
+# Temporary files
+*.tmp
+*.temp
+.cache
