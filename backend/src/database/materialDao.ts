@@ -1,5 +1,6 @@
 import { db } from './db';
 import type { Material, MaterialType, MediaType } from '../types';
+import type { LibraryMaterial } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 export function getAllMaterials(): Material[] {
@@ -139,5 +140,113 @@ function deserializeMaterial(row: any): Material {
     description: row.description as string,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string)
+  };
+}
+
+export function findAllLibraryMaterials(): LibraryMaterial[] {
+  const rows = db.prepare('SELECT * FROM library_materials ORDER BY created_at DESC').all();
+  return (rows as any[]).map(rowToLibraryMaterial);
+}
+
+export function findLibraryMaterialsByCategory(categoryId: number): LibraryMaterial[] {
+  const rows = db.prepare('SELECT * FROM library_materials WHERE category_id = ? ORDER BY created_at DESC').all(categoryId);
+  return (rows as any[]).map(rowToLibraryMaterial);
+}
+
+export function findLibraryMaterialById(id: number): LibraryMaterial | undefined {
+  const row = db.prepare('SELECT * FROM library_materials WHERE id = ?').get(id);
+  if (!row) return undefined;
+  return rowToLibraryMaterial(row as any);
+}
+
+export function createLibraryMaterial(data: {
+  type: 'image' | 'video';
+  source: 'manual' | 'hot-search' | 'agent';
+  metadata: string;
+  name: string;
+  description?: string;
+  category_id: number;
+  tags?: string;
+}): LibraryMaterial {
+  const stmt = db.prepare(`
+    INSERT INTO library_materials (type, source, metadata, name, description, category_id, tags)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  const result = stmt.run(
+    data.type,
+    data.source,
+    data.metadata,
+    data.name,
+    data.description || null,
+    data.category_id,
+    data.tags || null
+  );
+  const id = Number(result.lastInsertRowid);
+  return {
+    id,
+    ...data,
+    created_at: new Date().toISOString(),
+  };
+}
+
+export function updateLibraryMaterial(id: number, data: {
+  name?: string;
+  description?: string;
+  category_id?: number;
+  tags?: string;
+}): LibraryMaterial | undefined {
+  const existing = findLibraryMaterialById(id);
+  if (!existing) return undefined;
+
+  const updateFields: string[] = [];
+  const params: any[] = [];
+
+  if (data.name !== undefined) {
+    updateFields.push('name = ?');
+    params.push(data.name);
+  }
+  if (data.description !== undefined) {
+    updateFields.push('description = ?');
+    params.push(data.description);
+  }
+  if (data.category_id !== undefined) {
+    updateFields.push('category_id = ?');
+    params.push(data.category_id);
+  }
+  if (data.tags !== undefined) {
+    updateFields.push('tags = ?');
+    params.push(data.tags);
+  }
+
+  if (updateFields.length === 0) return existing;
+
+  params.push(id);
+  const sql = `UPDATE library_materials SET ${updateFields.join(', ')} WHERE id = ?`;
+  db.prepare(sql).run(params);
+
+  return findLibraryMaterialById(id);
+}
+
+export function deleteLibraryMaterial(id: number): boolean {
+  const result = db.prepare('DELETE FROM library_materials WHERE id = ?').run(id);
+  return result.changes > 0;
+}
+
+export function deleteLibraryMaterialsByCategoryId(categoryId: number): number {
+  const result = db.prepare('DELETE FROM library_materials WHERE category_id = ?').run(categoryId);
+  return result.changes;
+}
+
+function rowToLibraryMaterial(row: any): LibraryMaterial {
+  return {
+    id: row.id,
+    type: row.type,
+    source: row.source,
+    metadata: row.metadata,
+    name: row.name,
+    description: row.description,
+    category_id: row.category_id,
+    tags: row.tags,
+    created_at: row.created_at,
   };
 }
