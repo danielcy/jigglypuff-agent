@@ -6,6 +6,8 @@ import llmConfigRoutes from './routes/llmConfig';
 import mcpConfigRoutes from './routes/mcpConfig';
 import trendingVideoRoutes from './routes/trendingVideo';
 import resourceRoutes from './routes/resources';
+import materialCategoryRoutes from './routes/materialCategory';
+import materialRoutes from './routes/materials';
 import * as uploadController from './controllers/upload';
 import path from 'path';
 
@@ -27,6 +29,8 @@ app.use('/api/llm-configs', llmConfigRoutes);
 app.use('/api/mcp-configs', mcpConfigRoutes);
 app.use('/api/trending-videos', trendingVideoRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/material-categories', materialCategoryRoutes);
+app.use('/api/materials', materialRoutes);
 app.post('/api/upload', uploadController.uploadFile(), uploadController.handleUpload);
 app.use('/uploads', uploadController.serveUploads());
 
