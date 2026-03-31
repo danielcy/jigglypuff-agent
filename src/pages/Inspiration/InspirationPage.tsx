@@ -14,7 +14,7 @@ import {
   Progress,
 } from 'antd';
 import { SearchOutlined, ReloadOutlined, EyeOutlined, CloudUploadOutlined } from '@ant-design/icons';
-import type { TrendingVideo, Resource, ResourceStatus, MaterialCategory } from '../../types';
+import type { TrendingVideo, Resource, MaterialCategory } from '../../types';
 import { trendingVideoApi, resourceApi, materialCategoryApi, materialApi } from '../../services/api';
 
 const platformOptions = [
@@ -39,9 +39,12 @@ const InspirationPage: React.FC = () => {
   const [currentResource, setCurrentResource] = useState<Resource | null>(null);
   const [resourceLoading, setResourceLoading] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
+  const [newCategoryModalVisible, setNewCategoryModalVisible] = useState(false);
   const [categories, setCategories] = useState<MaterialCategory[]>([]);
   const [addLoading, setAddLoading] = useState(false);
+  const [newCategoryLoading, setNewCategoryLoading] = useState(false);
   const [addForm] = Form.useForm();
+  const [newCategoryForm] = Form.useForm();
   const currentVideoRef = useRef<TrendingVideo | null>(null);
   const pollingIntervalRef = useRef<number | null>(null);
   const [form] = Form.useForm();
@@ -102,6 +105,33 @@ const InspirationPage: React.FC = () => {
   const closeAddModal = () => {
     setAddModalVisible(false);
     addForm.resetFields();
+  };
+
+  const openNewCategoryModal = () => {
+    newCategoryForm.setFieldsValue({ name: '', description: '' });
+    setNewCategoryModalVisible(true);
+  };
+
+  const closeNewCategoryModal = () => {
+    setNewCategoryModalVisible(false);
+    newCategoryForm.resetFields();
+  };
+
+  const handleCreateCategory = async () => {
+    try {
+      const values = await newCategoryForm.validateFields();
+      setNewCategoryLoading(true);
+      const newCategory = await materialCategoryApi.create(values);
+      setCategories([...categories, newCategory]);
+      addForm.setFieldsValue({ category_id: newCategory.id });
+      message.success('创建成功');
+      closeNewCategoryModal();
+    } catch (error) {
+      console.error('Failed to create category:', error);
+      message.error('创建失败');
+    } finally {
+      setNewCategoryLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -458,19 +488,49 @@ const InspirationPage: React.FC = () => {
               label="所属类目"
               rules={[{ required: true, message: '请选择类目' }]}
             >
-              <Select placeholder="请选择类目">
-                {categories.map(c => (
-                  <Select.Option key={c.id} value={c.id}>
-                    {c.name}
-                  </Select.Option>
-                ))}
-              </Select>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Select placeholder="请选择类目" style={{ flex: 1 }}>
+                  {categories.map(c => (
+                    <Select.Option key={c.id} value={c.id}>
+                      {c.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+                <Button onClick={openNewCategoryModal}>新增类目</Button>
+              </div>
             </Form.Item>
             <Form.Item
               name="tags"
               label="标签"
             >
               <Input placeholder="多个标签用逗号分隔（可选）" />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Modal
+          title="新增类目"
+          open={newCategoryModalVisible}
+          onCancel={closeNewCategoryModal}
+          onOk={handleCreateCategory}
+          okText="创建"
+          cancelText="取消"
+          confirmLoading={newCategoryLoading}
+          width={400}
+        >
+          <Form form={newCategoryForm} layout="vertical">
+            <Form.Item
+              name="name"
+              label="类目名称"
+              rules={[{ required: true, message: '请输入类目名称' }]}
+            >
+              <Input placeholder="请输入类目名称" />
+            </Form.Item>
+            <Form.Item
+              name="description"
+              label="类目描述"
+            >
+              <Input.TextArea placeholder="请输入类目描述（可选）" rows={3} />
             </Form.Item>
           </Form>
         </Modal>

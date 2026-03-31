@@ -27,8 +27,10 @@ const MaterialsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [materialModalVisible, setMaterialModalVisible] = useState(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<MaterialCategory | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<LibraryMaterial | null>(null);
+  const [previewMaterial, setPreviewMaterial] = useState<LibraryMaterial | null>(null);
   const [categoryForm] = Form.useForm();
   const [materialForm] = Form.useForm();
 
@@ -129,6 +131,16 @@ const MaterialsPage: React.FC = () => {
     setMaterialModalVisible(false);
     setEditingMaterial(null);
     materialForm.resetFields();
+  };
+
+  const openPreviewModal = (material: LibraryMaterial) => {
+    setPreviewMaterial(material);
+    setPreviewModalVisible(true);
+  };
+
+  const closePreviewModal = () => {
+    setPreviewModalVisible(false);
+    setPreviewMaterial(null);
   };
 
   const handleMaterialSubmit = async () => {
@@ -284,9 +296,10 @@ const MaterialsPage: React.FC = () => {
                     <Card
                       key={material.id}
                       hoverable
+                      onClick={() => openPreviewModal(material)}
                       cover={
                         imageUrl ? (
-                          <div style={{ height: 200, overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
+                          <div style={{ height: 200, overflow: 'hidden', backgroundColor: '#f5f5f5', cursor: 'pointer' }}>
                             <img
                               alt={material.name}
                               src={imageUrl.startsWith('/') ? `${backendUrl}${imageUrl}` : imageUrl}
@@ -294,7 +307,7 @@ const MaterialsPage: React.FC = () => {
                             />
                           </div>
                         ) : (
-                          <div style={{ height: 200, backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                          <div style={{ height: 200, backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc', cursor: 'pointer' }}>
                             无封面
                           </div>
                         )
@@ -303,13 +316,19 @@ const MaterialsPage: React.FC = () => {
                         <Button
                           type="text"
                           icon={<EditOutlined />}
-                          onClick={() => openMaterialModal(material)}
+                          onClick={e => {
+                            e?.stopPropagation();
+                            openMaterialModal(material);
+                          }}
                         >
                           编辑
                         </Button>,
                         <Popconfirm
                           title="确定要删除这个素材吗？"
-                          onConfirm={() => handleDeleteMaterial(material.id)}
+                          onConfirm={e => {
+                            e?.stopPropagation();
+                            handleDeleteMaterial(material.id);
+                          }}
                           okText="确定删除"
                           cancelText="取消"
                         >
@@ -317,6 +336,7 @@ const MaterialsPage: React.FC = () => {
                             type="text"
                             danger
                             icon={<DeleteOutlined />}
+                            onClick={e => e?.stopPropagation()}
                           >
                             删除
                           </Button>
@@ -417,6 +437,62 @@ const MaterialsPage: React.FC = () => {
             <Input placeholder="多个标签用逗号分隔（可选）" />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={previewMaterial?.name}
+        open={previewModalVisible}
+        onCancel={closePreviewModal}
+        footer={null}
+        width={640}
+        destroyOnClose
+        style={{ maxHeight: '80vh' }}
+        bodyStyle={{ maxHeight: 'calc(80vh - 110px)', overflowY: 'auto' }}
+      >
+        {previewMaterial && (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <p><strong>名称：</strong> {previewMaterial.name}</p>
+              {previewMaterial.description && <p><strong>描述：</strong> {previewMaterial.description}</p>}
+              <p><strong>类型：</strong> {previewMaterial.type === 'image' ? '图片' : '视频'}</p>
+              <p><strong>标签：</strong> {previewMaterial.tags || '无'}</p>
+            </div>
+
+            <div style={{ maxHeight: '50vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              {(() => {
+                const metadata = parseMetadata(previewMaterial.metadata);
+                const backendUrl = getBackendUrl();
+
+                if (previewMaterial.type === 'image') {
+                  const imageUrl = metadata.imageUrl;
+                  if (!imageUrl) return null;
+                  return (
+                    <img
+                      src={imageUrl.startsWith('/') ? `${backendUrl}${imageUrl}` : imageUrl}
+                      alt={previewMaterial.name}
+                      style={{ maxWidth: '100%', maxHeight: '50vh', objectFit: 'contain', borderRadius: 8 }}
+                    />
+                  );
+                }
+
+                if (previewMaterial.type === 'video') {
+                  const videoUrl = metadata.videoUrl;
+                  if (!videoUrl) return null;
+                  return (
+                    <video
+                      src={videoUrl}
+                      controls
+                      autoPlay
+                      style={{ width: '100%', maxHeight: '50vh', objectFit: 'contain', borderRadius: 8 }}
+                    />
+                  );
+                }
+
+                return null;
+              })()}
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
