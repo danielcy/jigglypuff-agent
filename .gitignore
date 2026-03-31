@@ -53,3 +53,6 @@ coverage
 *.tmp
 *.temp
 .cache
+
+# Superpowers
+*/superpowers
