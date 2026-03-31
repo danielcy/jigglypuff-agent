@@ -1,4 +1,4 @@
-import type { Pet, LLMConfig, MCPConfig, TrendingVideo, Tool, Resource } from '../types';
+import type { Pet, LLMConfig, MCPConfig, TrendingVideo, Tool, Resource, MaterialCategory, LibraryMaterial } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
@@ -196,6 +196,76 @@ export const resourceApi = {
   getAll: (): Promise<Resource[]> => request('/resources'),
   delete: (id: string): Promise<{ success: boolean }> =>
     request(`/resources/${id}`, {
+      method: 'DELETE',
+    }),
+};
+
+export const materialCategoryApi = {
+  getAll: (): Promise<MaterialCategory[]> => request('/material-categories'),
+  getById: (id: number): Promise<MaterialCategory> => request(`/material-categories/${id}`),
+  create: (data: { name: string; description?: string }): Promise<MaterialCategory> =>
+    request('/material-categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }),
+  update: (id: number, data: { name?: string; description?: string }): Promise<MaterialCategory> =>
+    request(`/material-categories/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number): Promise<{ success: boolean; deletedCount: number }> =>
+    request(`/material-categories/${id}`, {
+      method: 'DELETE',
+    }),
+};
+
+export interface CreateLibraryMaterialRequest {
+  type: 'image' | 'video';
+  source: 'manual' | 'hot-search' | 'agent';
+  metadata: string;
+  name: string;
+  description?: string;
+  category_id: number;
+  tags?: string;
+}
+
+export interface UpdateLibraryMaterialRequest {
+  name?: string;
+  description?: string;
+  category_id?: number;
+  tags?: string;
+}
+
+export const materialApi = {
+  getAll: (categoryId?: number): Promise<LibraryMaterial[]> => {
+    const url = categoryId ? `/materials?categoryId=${categoryId}` : '/materials';
+    return request(url);
+  },
+  getById: (id: number): Promise<LibraryMaterial> => request(`/materials/${id}`),
+  create: (data: CreateLibraryMaterialRequest): Promise<LibraryMaterial> =>
+    request('/materials', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }),
+  update: (id: number, data: UpdateLibraryMaterialRequest): Promise<LibraryMaterial> =>
+    request(`/materials/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number): Promise<{ success: boolean }> =>
+    request(`/materials/${id}`, {
       method: 'DELETE',
     }),
 };
