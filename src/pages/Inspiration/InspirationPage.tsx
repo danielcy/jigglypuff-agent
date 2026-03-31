@@ -13,9 +13,9 @@ import {
   Modal,
   Progress,
 } from 'antd';
-import { SearchOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
-import type { TrendingVideo, Resource, ResourceStatus } from '../../types';
-import { trendingVideoApi, resourceApi } from '../../services/api';
+import { SearchOutlined, ReloadOutlined, EyeOutlined, CloudUploadOutlined } from '@ant-design/icons';
+import type { TrendingVideo, Resource, ResourceStatus, MaterialCategory } from '../../types';
+import { trendingVideoApi, resourceApi, materialCategoryApi, materialApi } from '../../services/api';
 
 const platformOptions = [
   { label: 'B站', value: 'bilibili' },
@@ -36,11 +36,73 @@ const InspirationPage: React.FC = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 12, total: 0 });
   const [modalVisible, setModalVisible] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<TrendingVideo | null>(null);
-  const currentVideoRef = useRef<TrendingVideo | null>(null);
   const [currentResource, setCurrentResource] = useState<Resource | null>(null);
   const [resourceLoading, setResourceLoading] = useState(false);
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [categories, setCategories] = useState<MaterialCategory[]>([]);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addForm] = Form.useForm();
+  const currentVideoRef = useRef<TrendingVideo | null>(null);
   const pollingIntervalRef = useRef<number | null>(null);
   const [form] = Form.useForm();
+
+  const loadCategories = useCallback(async () => {
+    try {
+      const data = await materialCategoryApi.getAll();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
+  }, []);
+
+  const handleAddToLibrary = () => {
+    loadCategories();
+    if (!currentVideo || !currentResource || !currentResource.url) return;
+    addForm.setFieldsValue({
+      name: currentVideo.title,
+      description: currentVideo.description,
+      category_id: undefined,
+      tags: '',
+    });
+    setAddModalVisible(true);
+  };
+
+  const handleAddSubmit = async () => {
+    if (!currentVideo || !currentResource || !currentResource.url) return;
+    try {
+      const values = await addForm.validateFields();
+      setAddLoading(true);
+
+      const metadata = JSON.stringify({
+        coverUrl: getProxiedImageUrl(currentVideo.coverUrl),
+        videoUrl: `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}${currentResource.url}`,
+      });
+
+      await materialApi.create({
+        name: values.name,
+        description: values.description,
+        category_id: values.category_id,
+        tags: values.tags,
+        type: 'video',
+        source: 'hot-search',
+        metadata,
+      });
+
+      message.success('成功添加到素材库');
+      setAddModalVisible(false);
+      addForm.resetFields();
+    } catch (error) {
+      console.error('Failed to add to library:', error);
+      message.error('添加失败');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const closeAddModal = () => {
+    setAddModalVisible(false);
+    addForm.resetFields();
+  };
 
   useEffect(() => {
     currentVideoRef.current = currentVideo;
@@ -338,13 +400,24 @@ const InspirationPage: React.FC = () => {
             )}
 
             {currentResource.status === 'done' && currentResource.url && (
-              <div style={{ maxHeight: '50vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <video
-                  src={`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}${currentResource.url}`}
-                  controls
-                  autoPlay
-                  style={{ width: '100%', maxHeight: '50vh', objectFit: 'contain', borderRadius: 8 }}
-                />
+              <div>
+                <div style={{ maxHeight: '50vh', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                  <video
+                    src={`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}${currentResource.url}`}
+                    controls
+                    autoPlay
+                    style={{ width: '100%', maxHeight: '50vh', objectFit: 'contain', borderRadius: 8 }}
+                  />
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <Button
+                    type="primary"
+                    icon={<CloudUploadOutlined />}
+                    onClick={handleAddToLibrary}
+                  >
+                    加入素材库
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -355,6 +428,52 @@ const InspirationPage: React.FC = () => {
             )}
           </div>
         )}
+
+        <Modal
+          title="添加到素材库"
+          open={addModalVisible}
+          onCancel={closeAddModal}
+          onOk={handleAddSubmit}
+          okText="添加"
+          cancelText="取消"
+          confirmLoading={addLoading}
+          width={500}
+        >
+          <Form form={addForm} layout="vertical">
+            <Form.Item
+              name="name"
+              label="素材名称"
+              rules={[{ required: true, message: '请输入素材名称' }]}
+            >
+              <Input placeholder="请输入素材名称" />
+            </Form.Item>
+            <Form.Item
+              name="description"
+              label="素材描述"
+            >
+              <Input.TextArea placeholder="请输入素材描述（可选）" rows={3} />
+            </Form.Item>
+            <Form.Item
+              name="category_id"
+              label="所属类目"
+              rules={[{ required: true, message: '请选择类目' }]}
+            >
+              <Select placeholder="请选择类目">
+                {categories.map(c => (
+                  <Select.Option key={c.id} value={c.id}>
+                    {c.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="tags"
+              label="标签"
+            >
+              <Input placeholder="多个标签用逗号分隔（可选）" />
+            </Form.Item>
+          </Form>
+        </Modal>
       </Modal>
     </div>
   );
