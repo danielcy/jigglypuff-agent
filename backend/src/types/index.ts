@@ -156,3 +156,22 @@ export interface Resource {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface MaterialCategory {
+  id: number;
+  name: string;
+  description?: string;
+  created_at: string;
+}
+
+export interface LibraryMaterial {
+  id: number;
+  type: 'image' | 'video';
+  source: 'manual' | 'hot-search' | 'agent';
+  metadata: string;
+  name: string;
+  description?: string;
+  category_id: number;
+  tags?: string;
+  created_at: string;
+}
