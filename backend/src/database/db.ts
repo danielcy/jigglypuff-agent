@@ -114,6 +114,26 @@ export function initDatabase() {
       error TEXT,
       created_at DATETIME NOT NULL,
       updated_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS material_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS library_materials (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      source TEXT NOT NULL,
+      metadata TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      category_id INTEGER NOT NULL,
+      tags TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (category_id) REFERENCES material_categories(id)
     );`
   ];
 
