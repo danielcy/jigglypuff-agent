@@ -31,7 +31,8 @@ app.use('/api/trending-videos', trendingVideoRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/material-categories', materialCategoryRoutes);
 app.use('/api/materials', materialRoutes);
-app.post('/api/upload', uploadController.uploadFile(), uploadController.handleUpload);
+app.post('/api/upload', uploadController.uploadSingleFile(), uploadController.handleUpload);
+app.post('/api/upload-two', uploadController.uploadTwoFiles(), uploadController.handleUploadTwoFiles);
 app.use('/uploads', uploadController.serveUploads());
 
 const resourcesRoot = path.join(__dirname, '../../data/resources');

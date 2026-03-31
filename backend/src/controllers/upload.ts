@@ -20,23 +20,36 @@ const storage = multer.diskStorage({
   },
 });
 
+const allowedMimeTypes = [
+  // images
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+  // videos
+  'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+];
+
 const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: 100 * 1024 * 1024, // 100MB max per file
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype)) {
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error(`File type ${file.mimetype} not allowed`));
     }
   },
 });
 
-export function uploadFile() {
+export function uploadSingleFile() {
   return upload.single('file');
+}
+
+export function uploadTwoFiles() {
+  return upload.fields([
+    { name: 'cover', maxCount: 1 },
+    { name: 'video', maxCount: 1 },
+  ]);
 }
 
 export function handleUpload(req: Request, res: Response) {
@@ -50,6 +63,27 @@ export function handleUpload(req: Request, res: Response) {
     originalname: req.file.originalname,
     size: req.file.size,
   });
+}
+
+export function handleUploadTwoFiles(req: Request, res: Response) {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const result: { cover?: { url: string; filename: string }, video?: { url: string; filename: string } } = {};
+
+  if (files.cover && files.cover[0]) {
+    result.cover = {
+      url: `/uploads/${files.cover[0].filename}`,
+      filename: files.cover[0].filename,
+    };
+  }
+
+  if (files.video && files.video[0]) {
+    result.video = {
+      url: `/uploads/${files.video[0].filename}`,
+      filename: files.video[0].filename,
+    };
+  }
+
+  res.json(result);
 }
 
 export function serveUploads() {
