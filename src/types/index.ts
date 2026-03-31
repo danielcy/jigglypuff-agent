@@ -154,3 +154,31 @@ export interface Resource {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface MaterialCategory {
+  id: number;
+  name: string;
+  description?: string;
+  created_at: string;
+}
+
+export type LibraryMaterialType = 'image' | 'video';
+export type LibraryMaterialSource = 'manual' | 'hot-search' | 'agent';
+
+export interface LibraryMaterial {
+  id: number;
+  type: LibraryMaterialType;
+  source: LibraryMaterialSource;
+  metadata: string;
+  name: string;
+  description?: string;
+  category_id: number;
+  tags?: string;
+  created_at: string;
+}
+
+export interface MaterialMetadata {
+  imageUrl?: string;
+  videoUrl?: string;
+  coverUrl?: string;
+}
