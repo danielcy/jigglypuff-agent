@@ -18,7 +18,6 @@ dist-ssr
 *.local
 
 # Data - SQLite database and downloaded resources
-data
 data/*.db
 data/resources/**/*
 data/uploads/**/*

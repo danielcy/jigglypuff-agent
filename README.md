@@ -4,7 +4,7 @@
 
 **AI 素材灵感收集工作台 + 多 Agent 宠物自媒体全自动创作系统**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[!\[License: MIT\](https://img.shields.io/badge/License-MIT-yellow.svg null)](https://opensource.org/licenses/MIT)
 
 通过 MCP 搜索热门短视频，离线下载到本地素材库，再由多 Agent 协作完成 **爆款分析 → 脚本生成 → 分镜设计** 全流程。
 
@@ -21,7 +21,7 @@
 - [📝 TODO](#-todo)
 - [📄 License](#-license)
 
----
+***
 
 ## ✨ 功能特性
 
@@ -40,12 +40,12 @@
 
 ### 🤖 多 Agent 全自动创作
 
-| Agent | 职责 |
-|-------|------|
-| **LeadAgent** | 主调度协调，记住 todo 列表，持续推进项目 |
-| **HotVideoAnalyzeAgent** | 爆款视频深度分析，拆解热门原因和可复刻要点 |
-| **ScriptAgent** | 根据分析生成完整宠物视频脚本 |
-| **ShotAgent** | 脚本转成分镜设计，包含时长、景别、运镜、画面描述、台词、音效 |
+| Agent                    | 职责                             |
+| ------------------------ | ------------------------------ |
+| **LeadAgent**            | 主调度协调，记住 todo 列表，持续推进项目        |
+| **HotVideoAnalyzeAgent** | 爆款视频深度分析，拆解热门原因和可复刻要点          |
+| **ScriptAgent**          | 根据分析生成完整宠物视频脚本                 |
+| **ShotAgent**            | 脚本转成分镜设计，包含时长、景别、运镜、画面描述、台词、音效 |
 
 - ✅ **SSE 流式输出** - 前端实时展示执行过程
 - ✅ **逐字段编辑** - 每一步结果支持点击图标直接编辑单个字段，无需编辑整个 JSON
@@ -60,20 +60,20 @@
 - ✅ 宠物信息管理（头像、年龄、品种）
 - ✅ 创作时可绑定宠物，Agent 会结合宠物特点生成个性化内容
 
----
+***
 
 ## ⚙️ 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| **前端** | React 19 + TypeScript + Vite + Ant Design |
-| **后端** | Node.js + Express + TypeScript |
-| **数据库** | SQLite (better-sqlite3) |
-| **下载** | [yt-dlp](https://github.com/yt-dlp/yt-dlp) (系统命令行调用) |
-| **AI 框架** | OpenAI 兼容 API，支持任意 LLM 服务商 |
-| **MCP** | [Model Context Protocol](https://modelcontextprotocol.io/) 集成 |
+| 层级        | 技术                                                            |
+| --------- | ------------------------------------------------------------- |
+| **前端**    | React 19 + TypeScript + Vite + Ant Design                     |
+| **后端**    | Node.js + Express + TypeScript                                |
+| **数据库**   | SQLite (better-sqlite3)                                       |
+| **下载**    | [yt-dlp](https://github.com/yt-dlp/yt-dlp) (系统命令行调用)          |
+| **AI 框架** | OpenAI 兼容 API，支持任意 LLM 服务商                                    |
+| **MCP**   | [Model Context Protocol](https://modelcontextprotocol.io/) 集成 |
 
----
+***
 
 ## 🚀 快速开始
 
@@ -117,7 +117,7 @@ cd backend && npm run build
 npm start
 ```
 
----
+***
 
 ## 📁 项目结构
 
@@ -154,7 +154,7 @@ jigglypuff/
 └── ...
 ```
 
----
+***
 
 ## 🎯 使用流程
 
@@ -167,26 +167,23 @@ jigglypuff/
 7. **多 Agent 协作** - Lead Agent 会自动调度子 Agent 完成分析 → 脚本 → 分镜
 8. **编辑调整** - 对生成结果不满意可以直接编辑单个字段，继续对话让 Agent 修改
 
----
+***
 
 ## 🔧 故障排查
 
-**Q: LLM 报错 `MissingParameter: messages.tool_call_id`**
-> A: 这是旧版本 bug，已在 https://github.com/danielcy/jigglypuff-agent/commit/eb11b12 修复，请拉取最新代码。
-
-**Q: 第二次发送消息后页面卡住没反应**
-> A: 已修复，缓存重用逻辑调整，现在每次新消息都会启动新执行。
-
 **Q: 下载失败**
+
 > A: 检查系统是否安装 yt-dlp，网络是否能访问目标网站。
 
 **Q: LLM 经常随机失败**
+
 > A: 现在已经添加自动重试（最多 3 次），大部分临时错误会自愈。
 
 **Q: 断开网络再连接后看不到正在运行的进度**
+
 > A: 现在已经支持断开重连，刷新页面会自动接收已缓存进度并继续。
 
----
+***
 
 ## 📝 TODO
 
@@ -195,9 +192,8 @@ jigglypuff/
 - [ ] 更多 MCP 平台支持
 - [ ] 提示词模板管理
 
----
+***
 
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details
-
