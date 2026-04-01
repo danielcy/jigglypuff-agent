@@ -1,0 +1,521 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1774963615841,
+  "projectRoot": "/Users/yangcao/Private/Codes/jigglypuff",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "8.0.1",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc -b && vite build",
+      "lint": "eslint .",
+      "preview": "vite preview"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "public",
+      "spec",
+      "src"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "backend": {
+      "path": "backend",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1774963615821,
+      "keyFiles": [
+        "package-lock.json",
+        "package.json",
+        "tsconfig.json"
+      ]
+    },
+    "data": {
+      "path": "data",
+      "purpose": "Data files",
+      "fileCount": 2,
+      "lastAccessed": 1774963615821,
+      "keyFiles": [
+        "jigglypuff.db"
+      ]
+    },
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 4,
+      "lastAccessed": 1774963615824,
+      "keyFiles": [
+        "bili_logo.png",
+        "favicon.svg",
+        "icons.svg",
+        "index.html"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1774963615825,
+      "keyFiles": []
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 3,
+      "lastAccessed": 1774963615825,
+      "keyFiles": [
+        "bili_logo.png",
+        "favicon.svg",
+        "icons.svg"
+      ]
+    },
+    "spec": {
+      "path": "spec",
+      "purpose": "Test specifications",
+      "fileCount": 3,
+      "lastAccessed": 1774963615825,
+      "keyFiles": [
+        "checklist.md",
+        "spec.md",
+        "tasks.md"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 4,
+      "lastAccessed": 1774963615825,
+      "keyFiles": [
+        "App.css",
+        "App.tsx",
+        "index.css",
+        "main.tsx"
+      ]
+    },
+    "backend/dist": {
+      "path": "backend/dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 1,
+      "lastAccessed": 1774963615826,
+      "keyFiles": [
+        "index.js"
+      ]
+    },
+    "backend/node_modules": {
+      "path": "backend/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1774963615827,
+      "keyFiles": []
+    },
+    "backend/src": {
+      "path": "backend/src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1774963615827,
+      "keyFiles": [
+        "index.ts"
+      ]
+    },
+    "dist/assets": {
+      "path": "dist/assets",
+      "purpose": "Static assets",
+      "fileCount": 2,
+      "lastAccessed": 1774963615829,
+      "keyFiles": [
+        "index-ByMNiXFF.js",
+        "index-CLiri3Bi.css"
+      ]
+    },
+    "src/assets": {
+      "path": "src/assets",
+      "purpose": "Static assets",
+      "fileCount": 3,
+      "lastAccessed": 1774963615829,
+      "keyFiles": [
+        "hero.png",
+        "react.svg",
+        "vite.svg"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1774963615829,
+      "keyFiles": []
+    },
+    "src/pages": {
+      "path": "src/pages",
+      "purpose": "Page components",
+      "fileCount": 0,
+      "lastAccessed": 1774963615829,
+      "keyFiles": []
+    },
+    "src/services": {
+      "path": "src/services",
+      "purpose": "Business logic services",
+      "fileCount": 1,
+      "lastAccessed": 1774963615830,
+      "keyFiles": [
+        "api.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/pages/Creations/CreationsPage.module.css",
+      "accessCount": 20,
+      "lastAccessed": 1775012988808,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ChatWindow.tsx",
+      "accessCount": 14,
+      "lastAccessed": 1775023101367,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/creations.ts",
+      "accessCount": 11,
+      "lastAccessed": 1775025177736,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ChatWindow.module.css",
+      "accessCount": 10,
+      "lastAccessed": 1775012076843,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ToolCallView.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1775023112178,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/hooks/useCreationChat.ts",
+      "accessCount": 8,
+      "lastAccessed": 1775013268270,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/CreationsPage.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1775038215758,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ChatMessage.module.css",
+      "accessCount": 7,
+      "lastAccessed": 1775009561074,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/database/petDao.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775024634132,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/agents/leadAgent.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775024737503,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/agents/baseAgent.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775026372645,
+      "type": "file"
+    },
+    {
+      "path": "src/types/index.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775037735174,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/mcpConfig.ts",
+      "accessCount": 5,
+      "lastAccessed": 1774964264846,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ChatMessage.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1775009408876,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ToolCallView.module.css",
+      "accessCount": 5,
+      "lastAccessed": 1775010438621,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 5,
+      "lastAccessed": 1775043431607,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/pets.ts",
+      "accessCount": 4,
+      "lastAccessed": 1774964135199,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/llmConfig.ts",
+      "accessCount": 4,
+      "lastAccessed": 1774964184749,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/tools/todoWriteTool.ts",
+      "accessCount": 4,
+      "lastAccessed": 1775022755591,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/TodoView.module.css",
+      "accessCount": 4,
+      "lastAccessed": 1775023370965,
+      "type": "file"
+    },
+    {
+      "path": "src/services/api.ts",
+      "accessCount": 4,
+      "lastAccessed": 1775038311001,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ProjectList.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1775038360046,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/trendingVideo.ts",
+      "accessCount": 3,
+      "lastAccessed": 1774964301767,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/trendingVideoV2.ts",
+      "accessCount": 3,
+      "lastAccessed": 1774964348923,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/TodoView.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1775023224145,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/tools/toolRegistry.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775024696811,
+      "type": "file"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 2,
+      "lastAccessed": 1774963754892,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/resource.ts",
+      "accessCount": 2,
+      "lastAccessed": 1774964390112,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/materialCategory.ts",
+      "accessCount": 2,
+      "lastAccessed": 1774964424859,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/material.ts",
+      "accessCount": 2,
+      "lastAccessed": 1774964469177,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/upload.ts",
+      "accessCount": 2,
+      "lastAccessed": 1774964498243,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/tools/baseTool.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775010782921,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/tools/shellTool.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775010870109,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/tools/videoAnalyzeTool.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775010896076,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/tools/fileReaderTool.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775010948348,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/tools/fileEditorTool.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775010993604,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/database/db.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775024510637,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Pets/PetsPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1775024748990,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 1,
+      "lastAccessed": 1774963675403,
+      "type": "file"
+    },
+    {
+      "path": "create_center_design.md",
+      "accessCount": 1,
+      "lastAccessed": 1774963684709,
+      "type": "file"
+    },
+    {
+      "path": "vite.config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774963690189,
+      "type": "file"
+    },
+    {
+      "path": "backend/package.json",
+      "accessCount": 1,
+      "lastAccessed": 1774963690248,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/controllers/creationTools.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774964511589,
+      "type": "file"
+    },
+    {
+      "path": ".playwright-cli/console-2026-04-01T03-11-24-059Z.log",
+      "accessCount": 1,
+      "lastAccessed": 1775013097348,
+      "type": "file"
+    },
+    {
+      "path": "backend/src",
+      "accessCount": 1,
+      "lastAccessed": 1775024212139,
+      "type": "directory"
+    },
+    {
+      "path": "src/pages",
+      "accessCount": 1,
+      "lastAccessed": 1775024270667,
+      "type": "directory"
+    },
+    {
+      "path": "backend/src/tools/petPortraitUpdateTool.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775024658214,
+      "type": "file"
+    },
+    {
+      "path": "agent_reconstruction_plan.md",
+      "accessCount": 1,
+      "lastAccessed": 1775026216537,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/types/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775026348778,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/agents/types.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775026404547,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

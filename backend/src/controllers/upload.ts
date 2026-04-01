@@ -54,14 +54,21 @@ export function uploadTwoFiles() {
 
 export function handleUpload(req: Request, res: Response) {
   if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+    return res.status(400).json({
+      code: 1,
+      message: 'No file uploaded',
+    });
   }
   const fileUrl = `/uploads/${req.file.filename}`;
   res.json({
-    url: fileUrl,
-    filename: req.file.filename,
-    originalname: req.file.originalname,
-    size: req.file.size,
+    code: 0,
+    message: 'success',
+    data: {
+      url: fileUrl,
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+    },
   });
 }
 
@@ -83,7 +90,11 @@ export function handleUploadTwoFiles(req: Request, res: Response) {
     };
   }
 
-  res.json(result);
+  res.json({
+    code: 0,
+    message: 'success',
+    data: result,
+  });
 }
 
 export function serveUploads() {

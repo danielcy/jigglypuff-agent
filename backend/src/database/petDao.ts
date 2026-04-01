@@ -11,6 +11,7 @@ export function getAllPets(): Pet[] {
     breed: row.breed as string,
     age: row.age as number,
     description: row.description as string,
+    portrait: row.portrait as string,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string)
   }));
@@ -26,19 +27,35 @@ export function getPetById(id: string): Pet | undefined {
     breed: row.breed as string,
     age: row.age as number,
     description: row.description as string,
+    portrait: row.portrait as string,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string)
   };
+}
+
+export function searchPetsByName(nameQuery: string): Pet[] {
+  const rows = db.prepare('SELECT * FROM pets WHERE name LIKE ?').all(`%${nameQuery}%`) as any[];
+  return rows.map(row => ({
+    id: row.id as string,
+    name: row.name as string,
+    avatar: row.avatar as string,
+    breed: row.breed as string,
+    age: row.age as number,
+    description: row.description as string,
+    portrait: row.portrait as string,
+    createdAt: new Date(row.created_at as string),
+    updatedAt: new Date(row.updated_at as string)
+  }));
 }
 
 export function createPet(pet: Omit<Pet, 'id' | 'createdAt' | 'updatedAt'>): Pet {
   const id = uuidv4();
   const now = new Date().toISOString();
   const stmt = db.prepare(`
-    INSERT INTO pets (id, name, avatar, breed, age, description, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO pets (id, name, avatar, breed, age, description, portrait, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  stmt.run(id, pet.name, pet.avatar || null, pet.breed || null, pet.age || null, pet.description || null, now, now);
+  stmt.run(id, pet.name, pet.avatar || null, pet.breed || null, pet.age || null, pet.description || null, pet.portrait || null, now, now);
   return {
     id,
     ...pet,
@@ -58,10 +75,11 @@ export function updatePet(id: string, pet: Partial<Pet>): Pet | undefined {
         breed = COALESCE(?, breed),
         age = COALESCE(?, age),
         description = COALESCE(?, description),
+        portrait = COALESCE(?, portrait),
         updated_at = ?
     WHERE id = ?
   `);
-  stmt.run(pet.name || null, pet.avatar || null, pet.breed || null, pet.age || null, pet.description || null, now, id);
+  stmt.run(pet.name || null, pet.avatar || null, pet.breed || null, pet.age || null, pet.description || null, pet.portrait || null, now, id);
   return getPetById(id);
 }
 

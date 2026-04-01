@@ -11,7 +11,7 @@ export interface TrendingSearchRequestV2 {
 
 function parseXiaohongshuResult(item: any): UnifiedSearchResult | null {
   if (!item || !item.id || !item.noteCard) return null;
-  
+
   const noteCard = item.noteCard;
   if (noteCard.type !== 'video') return null;
 
@@ -183,9 +183,16 @@ export async function searchTrendingVideosV2(req: Request, res: Response) {
     const trendingVideos: TrendingVideo[] = results.map(convertToTrendingVideo);
 
     console.log(`[TrendingSearchV2] Returning ${trendingVideos.length} results`);
-    res.json(trendingVideos);
+    res.json({
+      code: 0,
+      message: 'success',
+      data: trendingVideos,
+    });
   } catch (error) {
     console.error('[TrendingSearchV2] Search failed:', error);
-    res.status(500).json({ error: 'Search failed: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Search failed: ' + (error as Error).message,
+    });
   }
 }

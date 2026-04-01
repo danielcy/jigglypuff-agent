@@ -305,7 +305,10 @@ const MaterialsPage: React.FC = () => {
     }
   };
 
-  const parseMetadata = (metadata: string): MaterialMetadata => {
+  const parseMetadata = (metadata: string | Record<string, any>): MaterialMetadata => {
+    if (typeof metadata === 'object') {
+      return metadata as MaterialMetadata;
+    }
     try {
       return JSON.parse(metadata);
     } catch {
@@ -317,8 +320,9 @@ const MaterialsPage: React.FC = () => {
     return import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
   };
 
-  const splitTags = (tags?: string): string[] => {
+  const splitTags = (tags?: string | string[]): string[] => {
     if (!tags) return [];
+    if (Array.isArray(tags)) return tags;
     return tags.split(',').map(t => t.trim()).filter(Boolean);
   };
 

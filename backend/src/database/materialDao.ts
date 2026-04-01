@@ -162,12 +162,14 @@ export function findLibraryMaterialById(id: number): LibraryMaterial | undefined
 export function createLibraryMaterial(data: {
   type: 'image' | 'video';
   source: 'manual' | 'hot-search' | 'agent';
-  metadata: string;
+  metadata: Record<string, any>;
   name: string;
   description?: string;
-  category_id: number;
-  tags?: string;
+  categoryId: number;
+  tags?: string[];
 }): LibraryMaterial {
+  const metadataJson = JSON.stringify(data.metadata);
+  const tagsJson = data.tags ? JSON.stringify(data.tags) : null;
   const stmt = db.prepare(`
     INSERT INTO library_materials (type, source, metadata, name, description, category_id, tags)
     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -175,25 +177,25 @@ export function createLibraryMaterial(data: {
   const result = stmt.run(
     data.type,
     data.source,
-    data.metadata,
+    metadataJson,
     data.name,
     data.description || null,
-    data.category_id,
-    data.tags || null
+    data.categoryId,
+    tagsJson || null
   );
   const id = Number(result.lastInsertRowid);
   return {
     id,
     ...data,
-    created_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
   };
 }
 
 export function updateLibraryMaterial(id: number, data: {
   name?: string;
   description?: string;
-  category_id?: number;
-  tags?: string;
+  categoryId?: number;
+  tags?: string[];
 }): LibraryMaterial | undefined {
   const existing = findLibraryMaterialById(id);
   if (!existing) return undefined;
@@ -209,13 +211,13 @@ export function updateLibraryMaterial(id: number, data: {
     updateFields.push('description = ?');
     params.push(data.description);
   }
-  if (data.category_id !== undefined) {
+  if (data.categoryId !== undefined) {
     updateFields.push('category_id = ?');
-    params.push(data.category_id);
+    params.push(data.categoryId);
   }
   if (data.tags !== undefined) {
     updateFields.push('tags = ?');
-    params.push(data.tags);
+    params.push(JSON.stringify(data.tags));
   }
 
   if (updateFields.length === 0) return existing;
@@ -238,15 +240,33 @@ export function deleteLibraryMaterialsByCategoryId(categoryId: number): number {
 }
 
 function rowToLibraryMaterial(row: any): LibraryMaterial {
+  let metadata: Record<string, any> = {};
+  if (row.metadata) {
+    try {
+      metadata = JSON.parse(row.metadata);
+    } catch {
+      metadata = {};
+    }
+  }
+
+  let tags: string[] = [];
+  if (row.tags) {
+    try {
+      tags = JSON.parse(row.tags);
+    } catch {
+      tags = [];
+    }
+  }
+
   return {
     id: row.id,
     type: row.type,
     source: row.source,
-    metadata: row.metadata,
+    metadata,
     name: row.name,
     description: row.description,
-    category_id: row.category_id,
-    tags: row.tags,
-    created_at: row.created_at,
+    categoryId: row.category_id,
+    tags,
+    createdAt: row.created_at,
   };
 }

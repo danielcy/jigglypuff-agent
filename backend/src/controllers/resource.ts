@@ -14,20 +14,27 @@ export interface GetOrCreateResourceRequest {
 export function getOrCreateResource(req: Request, res: Response) {
   try {
     const { platform, itemId, originalUrl } = req.body as GetOrCreateResourceRequest;
-    
+
     let resource = resourceDao.getResourceByPlatformAndItemId(platform, itemId);
-    
+
     if (!resource) {
       resource = resourceDao.createResource(platform, itemId, originalUrl);
       triggerDownloadAsync(resource);
     } else if (resource.status === 'empty') {
       triggerDownloadAsync(resource);
     }
-    
-    res.json(resource);
+
+    res.json({
+      code: 0,
+      message: 'success',
+      data: resource,
+    });
   } catch (error) {
     console.error('[Resource] getOrCreateResource failed:', error);
-    res.status(500).json({ error: 'Failed to get or create resource: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to get or create resource: ' + (error as Error).message,
+    });
   }
 }
 
@@ -35,15 +42,25 @@ export function getResourceStatus(req: Request, res: Response) {
   try {
     const { platform, itemId } = req.params as { platform: string; itemId: string };
     const resource = resourceDao.getResourceByPlatformAndItemId(platform, itemId);
-    
+
     if (!resource) {
-      return res.status(404).json({ error: 'Resource not found' });
+      return res.status(404).json({
+        code: 1,
+        message: 'Resource not found',
+      });
     }
-    
-    res.json(resource);
+
+    res.json({
+      code: 0,
+      message: 'success',
+      data: resource,
+    });
   } catch (error) {
     console.error('[Resource] getResourceStatus failed:', error);
-    res.status(500).json({ error: 'Failed to get resource status: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to get resource status: ' + (error as Error).message,
+    });
   }
 }
 
@@ -51,26 +68,43 @@ export function retryDownload(req: Request, res: Response) {
   try {
     const { platform, itemId } = req.body;
     const resource = resourceDao.getResourceByPlatformAndItemId(platform, itemId);
-    
+
     if (!resource) {
-      return res.status(404).json({ error: 'Resource not found' });
+      return res.status(404).json({
+        code: 1,
+        message: 'Resource not found',
+      });
     }
-    
+
     triggerDownloadAsync(resource);
-    res.json(resource);
+    res.json({
+      code: 0,
+      message: 'success',
+      data: resource,
+    });
   } catch (error) {
     console.error('[Resource] retryDownload failed:', error);
-    res.status(500).json({ error: 'Failed to retry download: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to retry download: ' + (error as Error).message,
+    });
   }
 }
 
 export function getAllResources(req: Request, res: Response) {
   try {
     const resources = resourceDao.getAllResources();
-    res.json(resources);
+    res.json({
+      code: 0,
+      message: 'success',
+      data: resources,
+    });
   } catch (error) {
     console.error('[Resource] getAllResources failed:', error);
-    res.status(500).json({ error: 'Failed to get all resources: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to get all resources: ' + (error as Error).message,
+    });
   }
 }
 
@@ -78,9 +112,16 @@ export function deleteResource(req: Request, res: Response) {
   try {
     const { id } = req.params as { id: string };
     resourceDao.deleteResource(id);
-    res.json({ success: true });
+    res.json({
+      code: 0,
+      message: 'success',
+      data: { success: true },
+    });
   } catch (error) {
     console.error('[Resource] deleteResource failed:', error);
-    res.status(500).json({ error: 'Failed to delete resource: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to delete resource: ' + (error as Error).message,
+    });
   }
 }

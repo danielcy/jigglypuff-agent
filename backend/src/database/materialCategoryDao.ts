@@ -23,7 +23,7 @@ export function create(name: string, description?: string): MaterialCategory {
     id,
     name,
     description,
-    created_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
   };
 }
 
@@ -47,6 +47,6 @@ function rowToMaterialCategory(row: any): MaterialCategory {
     id: row.id,
     name: row.name,
     description: row.description,
-    created_at: row.created_at,
+    createdAt: row.created_at,
   };
 }

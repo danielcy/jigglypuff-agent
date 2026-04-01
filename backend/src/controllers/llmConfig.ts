@@ -3,56 +3,145 @@ import * as llmConfigDao from '../database/llmConfigDao';
 import type { LLMConfig } from '../types';
 
 export function getAllConfigs(req: Request, res: Response) {
-  const configs = llmConfigDao.getAllLLMConfigs();
-  res.json(configs);
+  try {
+    const configs = llmConfigDao.getAllLLMConfigs();
+    res.json({
+      code: 0,
+      message: 'success',
+      data: configs,
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
+  }
 }
 
 export function getDefaultConfig(req: Request, res: Response) {
-  const config = llmConfigDao.getDefaultLLMConfig();
-  res.json(config);
+  try {
+    const config = llmConfigDao.getDefaultLLMConfig();
+    res.json({
+      code: 0,
+      message: 'success',
+      data: config,
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
+  }
 }
 
 export function getConfigById(req: Request, res: Response) {
-  const { id } = req.params;
-  const config = llmConfigDao.getLLMConfigById(id as string);
-  if (!config) {
-    return res.status(404).json({ error: 'Config not found' });
+  try {
+    const { id } = req.params;
+    const config = llmConfigDao.getLLMConfigById(id as string);
+    if (!config) {
+      return res.status(404).json({
+        code: 1,
+        message: 'Config not found',
+      });
+    }
+    res.json({
+      code: 0,
+      message: 'success',
+      data: config,
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
   }
-  res.json(config);
 }
 
 export function createConfig(req: Request, res: Response) {
-  const configData = req.body;
-  const config = llmConfigDao.createLLMConfig(configData);
-  res.status(201).json(config);
+  try {
+    const configData = req.body;
+    const config = llmConfigDao.createLLMConfig(configData);
+    res.status(201).json({
+      code: 0,
+      message: 'success',
+      data: config,
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
+  }
 }
 
 export function updateConfig(req: Request, res: Response) {
-  const { id } = req.params;
-  const configData = req.body;
-  const config = llmConfigDao.updateLLMConfig(id as string, configData);
-  if (!config) {
-    return res.status(404).json({ error: 'Config not found' });
+  try {
+    const { id } = req.params;
+    const configData = req.body;
+    const config = llmConfigDao.updateLLMConfig(id as string, configData);
+    if (!config) {
+      return res.status(404).json({
+        code: 1,
+        message: 'Config not found',
+      });
+    }
+    res.json({
+      code: 0,
+      message: 'success',
+      data: config,
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
   }
-  res.json(config);
 }
 
 export function deleteConfig(req: Request, res: Response) {
-  const { id } = req.params;
-  const success = llmConfigDao.deleteLLMConfig(id as string);
-  if (!success) {
-    return res.status(404).json({ error: 'Config not found' });
+  try {
+    const { id } = req.params;
+    const success = llmConfigDao.deleteLLMConfig(id as string);
+    if (!success) {
+      return res.status(404).json({
+        code: 1,
+        message: 'Config not found',
+      });
+    }
+    res.json({
+      code: 0,
+      message: 'success',
+      data: { success: true },
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
   }
-  res.json({ success: true });
 }
 
 export function setDefault(req: Request, res: Response) {
-  const { id } = req.params;
-  const success = llmConfigDao.setDefaultLLMConfig(id as string);
-  if (!success) {
-    return res.status(404).json({ error: 'Config not found' });
+  try {
+    const { id } = req.params;
+    const success = llmConfigDao.setDefaultLLMConfig(id as string);
+    if (!success) {
+      return res.status(404).json({
+        code: 1,
+        message: 'Config not found',
+      });
+    }
+    res.json({
+      code: 0,
+      message: 'success',
+      data: { success: true },
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
   }
-  res.json({ success: true });
 }
 
 export async function testConnection(req: Request, res: Response) {
@@ -72,12 +161,24 @@ export async function testConnection(req: Request, res: Response) {
     clearTimeout(timeoutId);
 
     if (response.ok) {
-      res.json({ success: true, message: '连接成功' });
+      res.json({
+        code: 0,
+        message: 'success',
+        data: { success: true, message: '连接成功' },
+      });
     } else {
       const error = await response.text();
-      res.json({ success: false, message: `连接失败: ${response.status} ${error}` });
+      res.json({
+        code: 0,
+        message: 'success',
+        data: { success: false, message: `连接失败: ${response.status} ${error}` },
+      });
     }
   } catch (error) {
-    res.json({ success: false, message: `连接失败: ${(error as Error).message}` });
+    res.json({
+      code: 0,
+      message: 'success',
+      data: { success: false, message: `连接失败: ${(error as Error).message}` },
+    });
   }
 }

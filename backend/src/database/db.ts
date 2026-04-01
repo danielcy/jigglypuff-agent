@@ -84,9 +84,22 @@ export function initDatabase() {
       pet_ids TEXT,
       material_ids TEXT,
       status TEXT NOT NULL,
+      current_stage TEXT,
       content TEXT,
       plan JSON,
-      sub_agents JSON,
+      chat_history JSON,
+      analysis_result JSON,
+      script JSON,
+      shots JSON,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS creation_tools (
+      id TEXT PRIMARY KEY,
+      tool_name TEXT NOT NULL UNIQUE,
+      enabled BOOLEAN NOT NULL DEFAULT 1,
+      config JSON,
       created_at DATETIME NOT NULL,
       updated_at DATETIME NOT NULL
     );`,
@@ -140,6 +153,36 @@ export function initDatabase() {
   createTables.forEach(sql => {
     db.exec(sql);
   });
+
+  try {
+    db.exec('ALTER TABLE creations ADD COLUMN current_stage TEXT');
+  } catch (e) {
+  }
+
+  try {
+    db.exec('ALTER TABLE creations ADD COLUMN chat_history JSON');
+  } catch (e) {
+  }
+
+  try {
+    db.exec('ALTER TABLE creations ADD COLUMN analysis_result JSON');
+  } catch (e) {
+  }
+
+  try {
+    db.exec('ALTER TABLE creations ADD COLUMN script JSON');
+  } catch (e) {
+  }
+
+  try {
+    db.exec('ALTER TABLE creations ADD COLUMN shots JSON');
+  } catch (e) {
+  }
+
+  try {
+    db.exec('ALTER TABLE pets ADD COLUMN portrait TEXT');
+  } catch (e) {
+  }
 
   console.log('Database initialized successfully');
 }

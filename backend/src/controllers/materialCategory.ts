@@ -6,10 +6,17 @@ import type { MaterialCategory } from '../types';
 export function getAllCategories(req: Request, res: Response) {
   try {
     const categories = materialCategoryDao.findAll();
-    res.json(categories);
+    res.json({
+      code: 0,
+      message: 'success',
+      data: categories,
+    });
   } catch (error) {
     console.error('[MaterialCategory] getAllCategories failed:', error);
-    res.status(500).json({ error: 'Failed to get categories: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to get categories: ' + (error as Error).message,
+    });
   }
 }
 
@@ -18,12 +25,22 @@ export function getCategoryById(req: Request, res: Response) {
     const { id } = req.params;
     const category = materialCategoryDao.findById(Number(id));
     if (!category) {
-      return res.status(404).json({ error: 'Category not found' });
+      return res.status(404).json({
+        code: 1,
+        message: 'Category not found',
+      });
     }
-    res.json(category);
+    res.json({
+      code: 0,
+      message: 'success',
+      data: category,
+    });
   } catch (error) {
     console.error('[MaterialCategory] getCategoryById failed:', error);
-    res.status(500).json({ error: 'Failed to get category: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to get category: ' + (error as Error).message,
+    });
   }
 }
 
@@ -36,13 +53,23 @@ export function createCategory(req: Request, res: Response) {
   try {
     const { name, description } = req.body as CreateCategoryRequest;
     if (!name || name.trim().length === 0) {
-      return res.status(400).json({ error: 'Name is required' });
+      return res.status(400).json({
+        code: 1,
+        message: 'Name is required',
+      });
     }
     const category = materialCategoryDao.create(name.trim(), description?.trim());
-    res.status(201).json(category);
+    res.status(201).json({
+      code: 0,
+      message: 'success',
+      data: category,
+    });
   } catch (error) {
     console.error('[MaterialCategory] createCategory failed:', error);
-    res.status(500).json({ error: 'Failed to create category: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to create category: ' + (error as Error).message,
+    });
   }
 }
 
@@ -58,7 +85,10 @@ export function updateCategory(req: Request, res: Response) {
     const categoryId = Number(id);
     const existing = materialCategoryDao.findById(categoryId);
     if (!existing) {
-      return res.status(404).json({ error: 'Category not found' });
+      return res.status(404).json({
+        code: 1,
+        message: 'Category not found',
+      });
     }
     materialCategoryDao.update(
       categoryId,
@@ -66,10 +96,17 @@ export function updateCategory(req: Request, res: Response) {
       description
     );
     const updated = materialCategoryDao.findById(categoryId);
-    res.json(updated);
+    res.json({
+      code: 0,
+      message: 'success',
+      data: updated,
+    });
   } catch (error) {
     console.error('[MaterialCategory] updateCategory failed:', error);
-    res.status(500).json({ error: 'Failed to update category: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to update category: ' + (error as Error).message,
+    });
   }
 }
 
@@ -79,16 +116,26 @@ export function deleteCategory(req: Request, res: Response) {
     const categoryId = Number(id);
     const existing = materialCategoryDao.findById(categoryId);
     if (!existing) {
-      return res.status(404).json({ error: 'Category not found' });
+      return res.status(404).json({
+        code: 1,
+        message: 'Category not found',
+      });
     }
     const count = materialCategoryDao.countByCategoryId(categoryId);
     if (count > 0) {
       materialDao.deleteLibraryMaterialsByCategoryId(categoryId);
     }
     materialCategoryDao.remove(categoryId);
-    res.json({ success: true, deletedCount: count });
+    res.json({
+      code: 0,
+      message: 'success',
+      data: { success: true, deletedCount: count },
+    });
   } catch (error) {
     console.error('[MaterialCategory] deleteCategory failed:', error);
-    res.status(500).json({ error: 'Failed to delete category: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Failed to delete category: ' + (error as Error).message,
+    });
   }
 }

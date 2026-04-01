@@ -1,13 +1,28 @@
-import type { Pet, LLMConfig, MCPConfig, TrendingVideo, Tool, Resource, MaterialCategory, LibraryMaterial } from '../types';
+import type { Pet, LLMConfig, MCPConfig, TrendingVideo, Tool, Resource, MaterialCategory, LibraryMaterial, Creation, CreationTool } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api';
+
+interface WrappedApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${url}`, options);
   if (!response.ok) {
     throw new Error(`API request failed: ${response.statusText}`);
   }
-  return response.json();
+  const result = await response.json();
+  // 兼容两种格式：如果是 { code, message, data } 包装格式则提取 data，否则直接返回
+  if (result && typeof result === 'object' && 'code' in result && 'data' in result) {
+    const wrapped = result as WrappedApiResponse<T>;
+    if (wrapped.code !== 0) {
+      throw new Error(wrapped.message || 'API request failed');
+    }
+    return wrapped.data;
+  }
+  return result as T;
 }
 
 export const petApi = {
@@ -267,5 +282,58 @@ export const materialApi = {
   delete: (id: number): Promise<{ success: boolean }> =>
     request(`/materials/${id}`, {
       method: 'DELETE',
+    }),
+};
+
+export interface ChatRequest {
+  message: string;
+  agentType?: 'lead' | 'hot_analyze' | 'script' | 'shot';
+}
+
+export const creationApi = {
+  list: (): Promise<Array<Pick<Creation, 'id' | 'title' | 'status' | 'currentStage' | 'createdAt' | 'updatedAt'>>> =>
+    request('/creations'),
+  getById: (id: string): Promise<Creation> =>
+    request(`/creations/${id}`),
+  create: (data: { title: string; petIds: string[]; materialIds: string[] }): Promise<Creation> =>
+    request('/creations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<Creation>): Promise<Creation> =>
+    request(`/creations/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string): Promise<{ deleted: boolean }> =>
+    request(`/creations/${id}`, {
+      method: 'DELETE',
+    }),
+  executeTool: (id: string, toolName: string, args: Record<string, any>): Promise<any> =>
+    request(`/creations/${id}/tools/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ toolName, args }),
+    }),
+};
+
+export const creationToolApi = {
+  list: (): Promise<CreationTool[]> =>
+    request('/creation-tools'),
+  update: (id: string, data: Partial<CreationTool>): Promise<CreationTool> =>
+    request(`/creation-tools/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     }),
 };

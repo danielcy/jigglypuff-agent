@@ -8,6 +8,8 @@ import trendingVideoRoutes from './routes/trendingVideo';
 import resourceRoutes from './routes/resources';
 import materialCategoryRoutes from './routes/materialCategory';
 import materialRoutes from './routes/materials';
+import creationRoutes from './routes/creations';
+import creationToolRoutes from './routes/creationTools';
 import * as uploadController from './controllers/upload';
 import path from 'path';
 
@@ -31,6 +33,8 @@ app.use('/api/trending-videos', trendingVideoRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/material-categories', materialCategoryRoutes);
 app.use('/api/materials', materialRoutes);
+app.use('/api/creations', creationRoutes);
+app.use('/api/creation-tools', creationToolRoutes);
 app.post('/api/upload', uploadController.uploadSingleFile(), uploadController.handleUpload);
 app.post('/api/upload-two', uploadController.uploadTwoFiles(), uploadController.handleUploadTwoFiles);
 app.use('/uploads', uploadController.serveUploads());

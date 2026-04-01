@@ -283,6 +283,10 @@ const PetsPage: React.FC = () => {
           <Form.Item name="description" label="简介">
             <Input.TextArea placeholder="简单介绍一下你的宠物吧" rows={3} />
           </Form.Item>
+
+          <Form.Item name="portrait" label="AI 画像">
+            <Input.TextArea placeholder="AI 自动总结的宠物画像，也可以手动编辑" rows={4} />
+          </Form.Item>
         </Form>
       </Modal>
     </div>

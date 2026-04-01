@@ -10,13 +10,13 @@ export interface TrendingSearchRequest {
 
 function convertToTrendingVideo(unity: UnifiedSearchResult): TrendingVideo {
   let originalUrl: string | undefined;
-  
+
   if (unity.platform === 'xiaohongshu') {
     originalUrl = `https://www.xiaohongshu.com/explore/${unity.id}`;
   } else if (unity.platform === 'bilibili') {
     originalUrl = `https://www.bilibili.com/video/${unity.id}`;
   }
-  
+
   return {
     id: unity.id,
     platform: unity.platform,
@@ -41,14 +41,21 @@ export async function searchTrendingVideos(req: Request, res: Response) {
 
     const createResult = await HotSearchAgent.create(keyword, platforms);
     if (!createResult.success) {
-      return res.status(400).json({ error: createResult.error });
+      return res.status(400).json({
+        code: 1,
+        message: createResult.error || 'Search failed',
+      });
     }
 
     const agent = createResult.agent;
     const result = await agent.run(`搜索关键词: ${keyword}`);
 
     if (!result.finalAnswer) {
-      return res.json([]);
+      return res.json({
+        code: 0,
+        message: 'success',
+        data: [],
+      });
     }
 
     const unifiedResults = HotSearchAgent.parseFinalResult(result.finalAnswer);
@@ -56,14 +63,32 @@ export async function searchTrendingVideos(req: Request, res: Response) {
     const results: TrendingVideo[] = unifiedResults.map(convertToTrendingVideo);
 
     console.log(`[TrendingSearch] Returning ${results.length} results`);
-    res.json(results);
+    res.json({
+      code: 0,
+      message: 'success',
+      data: results,
+    });
   } catch (error) {
     console.error('Search failed:', error);
-    res.status(500).json({ error: 'Search failed: ' + (error as Error).message });
+    res.status(500).json({
+      code: 1,
+      message: 'Search failed: ' + (error as Error).message,
+    });
   }
 }
 
 export function getAllTrendingVideos(req: Request, res: Response) {
-  const videos = trendingVideoDao.getAllTrendingVideos();
-  res.json(videos);
+  try {
+    const videos = trendingVideoDao.getAllTrendingVideos();
+    res.json({
+      code: 0,
+      message: 'success',
+      data: videos,
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 1,
+      message: (error as Error).message,
+    });
+  }
 }

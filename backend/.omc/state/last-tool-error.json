@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"npm run build 2>&1\",\"timeout\":120000,\"description\":\"Build backend TypeScript\"}",
+  "error": "Exit code 2\n\n> jigglypuff-backend@1.0.0 build\n> tsc\n\nsrc/agents/built-in/hotVideoAnalyze.ts(50,58): error TS2339: Property 'trim' does not exist on type 'HotVideoAnalysis'.\nsrc/agents/built-in/script.ts(55,42): error TS2339: Property 'trim' does not exist on type 'Script'.\nsrc/agents/built-in/shot.ts(58,40): error TS2339: Property 'trim' does not exist on type 'ShotList'.\nsrc/tools/analysisSaveTool.ts(38,5): error TS2322: Type 'string' is not assignable to type 'HotVideoAnalysis'.\nsrc/tools/scri...",
+  "timestamp": "2026-04-01T08:27:02.065Z",
+  "retry_count": 1
+}

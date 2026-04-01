@@ -56,3 +56,11 @@ coverage
 
 # Superpowers
 */superpowers
+spec
+docs/specs
+
+# claude
+.claude
+
+#trae
+.trae
