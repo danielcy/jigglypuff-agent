@@ -5,15 +5,14 @@ import {
   Button,
   List,
   Typography,
-  Upload,
-  message,
   Spin,
 } from 'antd';
-import { SendOutlined, UploadOutlined } from '@ant-design/icons';
-import type { RcFile } from 'antd/es/upload';
-import type { ChatMessage } from '../../../types';
+import { SendOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import type { ChatMessage, LibraryMaterial } from '../../../types';
 import { ChatMessage as ChatMessageComponent } from './ChatMessage';
 import { ToolCallView } from './ToolCallView';
+import { SelectedMaterialsBar } from './SelectedMaterialsBar';
+import { MaterialSelectModal } from './MaterialSelectModal';
 import styles from './ChatWindow.module.css';
 
 const { Text } = Typography;
@@ -23,7 +22,7 @@ interface ChatWindowProps {
   messages: ChatMessage[];
   loading: boolean;
   connected: boolean;
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, attachments?: LibraryMaterial[]) => void;
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({
@@ -32,7 +31,25 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   onSendMessage,
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const [materialModalVisible, setMaterialModalVisible] = useState(false);
+  const [selectedMaterials, setSelectedMaterials] = useState<LibraryMaterial[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenMaterialModal = () => {
+    setMaterialModalVisible(true);
+  };
+
+  const handleCloseMaterialModal = () => {
+    setMaterialModalVisible(false);
+  };
+
+  const handleConfirmMaterialSelect = (selected: LibraryMaterial[]) => {
+    setSelectedMaterials(selected);
+  };
+
+  const handleRemoveMaterial = (id: number) => {
+    setSelectedMaterials(prev => prev.filter(m => m.id !== id));
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,9 +61,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleSend = () => {
     const trimmed = inputValue.trim();
-    if (!trimmed) return;
-    onSendMessage(trimmed);
+    if (!trimmed && selectedMaterials.length === 0) return;
+    onSendMessage(trimmed, selectedMaterials);
     setInputValue('');
+    setSelectedMaterials([]);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -54,14 +72,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       e.preventDefault();
       handleSend();
     }
-  };
-
-  const beforeUpload = (file: RcFile) => {
-    const isLt100M = file.size / 1024 / 1024 < 100 * 1024;
-    if (!isLt100M) {
-      message.error('File must be smaller than 100MB');
-    }
-    return isLt100M;
   };
 
   const renderMessageItem = (message: ChatMessage) => {
@@ -104,6 +114,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           <div ref={messagesEndRef} style={{height: 80}} />
         </div>
         <div className={styles.inputContainer}>
+          {/* 新增: 已选素材条 */}
+          <SelectedMaterialsBar
+            selected={selectedMaterials}
+            onRemove={handleRemoveMaterial}
+          />
           <div className={styles.inputWrapper}>
             <Input.TextArea
               className={styles.textArea}
@@ -115,29 +130,31 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               autoSize={{ minRows: 1, maxRows: 6 }}
             />
             <div className={styles.actions}>
-              <Upload
-                action={`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/upload`}
-                beforeUpload={beforeUpload}
+              {/* 修改: Upload 按钮改为 导入素材 */}
+              <Button
+                className={styles.uploadButton}
+                icon={<FolderOpenOutlined />}
                 disabled={loading}
-                showUploadList={false}
-              >
-                <Button
-                  className={styles.uploadButton}
-                  icon={<UploadOutlined />}
-                  disabled={loading}
-                />
-              </Upload>
+                onClick={handleOpenMaterialModal}
+              />
               <Button
                 className={styles.sendButton}
                 type="primary"
                 icon={<SendOutlined />}
                 onClick={handleSend}
-                disabled={!inputValue.trim() || loading}
+                disabled={(!inputValue.trim() && selectedMaterials.length === 0) || loading}
                 loading={loading}
               />
             </div>
           </div>
         </div>
+        {/* 新增: 素材选择弹窗 */}
+        <MaterialSelectModal
+          open={materialModalVisible}
+          onCancel={handleCloseMaterialModal}
+          onConfirm={handleConfirmMaterialSelect}
+          existingSelected={selectedMaterials}
+        />
       </div>
     </Card>
   );

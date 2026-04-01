@@ -2,6 +2,7 @@ import React from 'react';
 import { Typography } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import type { ChatMessage as ChatMessageType } from '../../../types';
+import { AttachmentCardsList } from './AttachmentCardsList';
 import styles from './ChatMessage.module.css';
 
 const { Text } = Typography;
@@ -17,6 +18,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     return (
       <div className={`${styles.message} ${styles.user}`}>
         <div className={`${styles.content} ${styles.userContent}`}>
+          {message.attachments && message.attachments.length > 0 && (
+            <AttachmentCardsList
+              materials={message.attachments}
+            />
+          )}
           <div style={{ whiteSpace: 'pre-wrap' }}>{message.content}</div>
           {message.toolName && (
             <div className={styles.toolName}>
