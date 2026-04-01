@@ -61,6 +61,8 @@ docs/specs
 
 # claude
 .claude
+.omc
+.playwright-cli
 
 #trae
 .trae
