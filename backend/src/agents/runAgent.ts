@@ -22,7 +22,8 @@ import type { Tool } from '../types';
 function buildInitialMessages(
   agentDef: AgentDefinition,
   context: AgentContext,
-  userInput: string
+  userInput: string,
+  attachments?: any[]
 ): AgentMessage[] {
   const systemPrompt = typeof agentDef.systemPrompt === 'function'
     ? agentDef.systemPrompt()
@@ -43,11 +44,41 @@ function buildInitialMessages(
     });
   }
 
-  // Add the user input
-  messages.push({
-    role: 'user',
-    content: userInput,
-  });
+  // Add the user input with attachments (if any)
+  if (attachments && attachments.length > 0) {
+    const content: any[] = [
+      { type: 'text', text: userInput }
+    ];
+
+    for (const attachment of attachments) {
+      if (attachment.type === 'image') {
+        content.push({
+          type: 'image_url',
+          image_url: {
+            url: attachment.url
+          }
+        });
+      } else if (attachment.type === 'video') {
+        content.push({
+          type: 'image_url', // 目前大多数大模型使用 image_url 类型处理视频
+          image_url: {
+            url: attachment.url
+          }
+        });
+      }
+    }
+
+    messages.push({
+      role: 'user',
+      content: content,
+    });
+  } else {
+    // 没有附件时保持原样
+    messages.push({
+      role: 'user',
+      content: userInput,
+    });
+  }
 
   return messages;
 }
@@ -243,7 +274,8 @@ export async function runAgent(
     content: string;
     toolName?: string;
     toolArgs?: Record<string, any>;
-  }[]
+  }[],
+  attachments?: any[]
 ): Promise<AgentResult> {
   const maxTurns = agentDef.maxTurns ?? 50;
   console.log(`[Agent Debug] Starting agent: ${agentDef.agentType}, maxTurns=${maxTurns}`);
@@ -303,11 +335,13 @@ export async function runAgent(
     });
   }
 
-  // Add the current user input AFTER loading existing history
-  messages.push({
-    role: 'user',
-    content: userInput,
-  });
+  // Add the current user input AFTER loading existing history - use buildInitialMessages to handle attachments
+  const initialMessages = buildInitialMessages(agentDef, context, userInput, attachments);
+  // 只添加最后一个用户消息，因为前面的系统提示已经添加过了
+  const lastMessage = initialMessages[initialMessages.length - 1];
+  if (lastMessage) {
+    messages.push(lastMessage);
+  }
 
   // Record the initial message count before starting execution - only new messages will be returned
   const initialMessagesLength = messages.length;

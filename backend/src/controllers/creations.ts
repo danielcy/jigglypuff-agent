@@ -129,6 +129,9 @@ export async function chat(req: Request, res: Response) {
     const agentType = req.method === 'GET'
       ? (req.query.agentType as string)
       : req.body.agentType;
+    const attachments = req.method === 'GET'
+      ? undefined
+      : req.body.attachments;
 
     const creation = creationDao.getCreationById(id as string);
     if (!creation) {
@@ -266,7 +269,7 @@ Please: continue working based on the existing todo list above. Update progress 
     // Note: In new architecture, chat history is already stored in creation.chatHistory
     // The full context is built fresh each time by lead agent with updated project state
 
-    const result = await runAgent(agentDef, context, fullInput, creation.chatHistory);
+    const result = await runAgent(agentDef, context, fullInput, creation.chatHistory, attachments);
     const messages = result.messages!;
     console.log(`[Chat Debug] Agent finished: success=${result.success}, messages_count=${messages.length}, has_finalAnswer=${!!result.finalAnswer}, finalAnswer_length=${result.finalAnswer?.length}`);
 
@@ -279,6 +282,7 @@ Please: continue working based on the existing todo list above. Update progress 
         id: Date.now().toString() + Math.random().toString(36).substr(2),
         role: 'user' as const,
         content: message,
+        attachments: attachments,
         timestamp: new Date(),
       },
       // Add assistant and tool messages from agent
