@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd backend && npm run build\",\"description\":\"Rebuild backend after fixing TypeScript errors\"}",
-  "error": "Exit code 2\n\n> jigglypuff-backend@1.0.0 build\n> tsc\n\nsrc/agents/runAgent.ts(280,13): error TS2322: Type '{ id: string; name: string | undefined; arguments: Record<string, any>; }[] | undefined' is not assignable to type 'AgentToolCall[] | undefined'.\n  Type '{ id: string; name: string | undefined; arguments: Record<string, any>; }[]' is not assignable to type 'AgentToolCall[]'.\n    Type '{ id: string; name: string | undefined; arguments: Record<string, any>; }' is not assignable to type 'AgentTo...",
-  "timestamp": "2026-04-01T13:24:47.349Z",
-  "retry_count": 2
-}
