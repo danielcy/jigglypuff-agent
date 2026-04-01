@@ -27,6 +27,7 @@ export interface AgentConfig {
   systemPrompt: string;
   availableTools: AgentAvailableTool[];
   maxSteps?: number;
+  onStep?: (step: number, content: string, streaming?: boolean) => void;
 }
 
 export interface AgentAvailableTool {
@@ -40,12 +41,14 @@ export abstract class BaseAgent {
   protected availableTools: AgentAvailableTool[];
   protected maxSteps: number;
   protected messages: AgentMessage[];
+  protected onStep?: (step: number, content: string, streaming?: boolean) => void;
 
   constructor(config: AgentConfig) {
     this.llmConfig = config.llmConfig;
     this.systemPrompt = config.systemPrompt;
     this.availableTools = config.availableTools;
     this.maxSteps = config.maxSteps || 100;
+    this.onStep = config.onStep;
     this.messages = [];
 
     this.messages.push({
@@ -78,7 +81,7 @@ export abstract class BaseAgent {
     this.messages.push(message);
   }
 
-  protected getMessages(): AgentMessage[] {
+  getMessages(): AgentMessage[] {
     return this.messages;
   }
 
@@ -197,6 +200,19 @@ export abstract class BaseAgent {
       const llmResponse = await this.callLLM();
       this.addMessage(llmResponse);
 
+      // Send step update to frontend
+      if (this.onStep) {
+        let content = '';
+        if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
+          content = `正在调用工具: ${llmResponse.toolCalls.map(tc => tc.name).join(', ')}`;
+        } else {
+          content = llmResponse.content;
+        }
+        this.onStep(step + 1, content, !llmResponse.toolCalls);
+        // Yield to event loop to allow SSE buffer to flush
+        await new Promise(resolve => setImmediate(resolve));
+      }
+
       if (!llmResponse.toolCalls || llmResponse.toolCalls.length === 0) {
         console.log(`[Agent Debug] Execution finished: no more tool calls needed`);
         return {
@@ -215,6 +231,12 @@ export abstract class BaseAgent {
             toolCallId: toolCall.id,
             name: toolCall.name,
           });
+          // Send tool result
+          if (this.onStep) {
+            this.onStep(step + 1, `工具 ${toolCall.name} 执行完成`, true);
+            // Yield to event loop to allow SSE buffer to flush
+            await new Promise(resolve => setImmediate(resolve));
+          }
         } catch (error) {
           console.error(`[Agent Debug] Tool call failed: ${toolCall.name}, error=${(error as Error).message}`);
           this.addMessage({
@@ -223,12 +245,21 @@ export abstract class BaseAgent {
             toolCallId: toolCall.id,
             name: toolCall.name,
           });
+          if (this.onStep) {
+            this.onStep(step + 1, `工具 ${toolCall.name} 执行失败: ${(error as Error).message}`, true);
+            // Yield to event loop to allow SSE buffer to flush
+            await new Promise(resolve => setImmediate(resolve));
+          }
         }
       }
       console.log(`[Agent Debug] Step ${step + 1} completed`);
     }
 
     console.warn(`[Agent Debug] Reached maximum steps limit: ${this.maxSteps}`);
+    if (this.onStep) {
+      this.onStep(this.maxSteps, `已达到最大步骤数限制 (${this.maxSteps})`, true);
+      await new Promise(resolve => setImmediate(resolve));
+    }
     return {
       shouldStop: true,
       finalAnswer: `Reached maximum steps (${this.maxSteps})`,

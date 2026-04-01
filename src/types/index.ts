@@ -5,6 +5,7 @@ export interface Pet {
   breed?: string;
   age?: number;
   description?: string;
+  portrait?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -73,7 +74,17 @@ export interface HotTopic {
   summarizedAt: Date;
 }
 
+export interface ChatMessage {
+  id: string;
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string;
+  toolName?: string;
+  toolArgs?: Record<string, any>;
+  timestamp: Date;
+}
+
 export type CreationStatus = 'draft' | 'in_progress' | 'completed';
+export type CreationStage = 'idle' | 'analysis' | 'scripting' | 'shotting' | 'done';
 
 export interface TodoItem {
   id: string;
@@ -81,6 +92,91 @@ export interface TodoItem {
   status: 'pending' | 'in_progress' | 'completed';
   createdAt: Date;
   completedAt?: Date;
+}
+
+export interface HotVideoAnalysis {
+  videoUrl: string;
+  title: string;
+  hotReasons: {
+    content: string;
+    style: string;
+    tags: string[];
+    structure: string;
+  };
+  copyAdvice: {
+    concept: string;
+    adjustments: string[];
+    keyPoints: string[];
+  };
+  analyzedAt: Date;
+  revisedAt?: Date;
+}
+
+export interface ScriptScene {
+  id: string;
+  sceneNo: number;
+  title: string;
+  duration: number;
+  description: string;
+  dialogue?: string;
+  bgmSuggestion?: string;
+}
+
+export interface Script {
+  title: string;
+  description: string;
+  totalDuration: number;
+  sceneCount: number;
+  scenes: ScriptScene[];
+  tags: string[];
+  generatedAt: Date;
+  revisedAt?: Date;
+}
+
+export type ShotSize = '远景' | '全景' | '中景' | '近景' | '特写';
+export type CameraMovement = '固定' | '推' | '拉' | '摇' | '移' | '跟' | '环绕';
+
+export interface Shot {
+  id: string;
+  shotNo: number;
+  duration: number;
+  shotSize: ShotSize;
+  cameraMovement: CameraMovement;
+  description: string;
+  dialogue?: string;
+  soundEffect?: string;
+  bgm?: string;
+  draftImageUrl?: string;
+}
+
+export interface ShotList {
+  scriptId: string;
+  totalDuration: number;
+  shots: Shot[];
+ generatedAt: Date;
+  revisedAt?: Date;
+}
+
+export interface CreationTool {
+  id: string;
+  toolName: string;
+  enabled: boolean;
+  config?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SSEEvent {
+  event: string;
+  data: any;
+}
+
+export interface SSEStepEvent {
+  type: 'thinking' | 'tool_call' | 'tool_result';
+  content?: string;
+  toolName?: string;
+  args?: Record<string, any>;
+  result?: any;
 }
 
 export interface SubAgentConfig {
@@ -96,9 +192,13 @@ export interface Creation {
   petIds: string[];
   materialIds: string[];
   status: CreationStatus;
+  currentStage: CreationStage;
+  content?: string;
   plan: TodoItem[];
-  content: string;
-  subAgents: SubAgentConfig[];
+  chatHistory: ChatMessage[];
+  analysisResult?: HotVideoAnalysis;
+  script?: Script;
+  shots?: ShotList;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -159,7 +259,7 @@ export interface MaterialCategory {
   id: number;
   name: string;
   description?: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export type LibraryMaterialType = 'image' | 'video';
@@ -169,12 +269,12 @@ export interface LibraryMaterial {
   id: number;
   type: LibraryMaterialType;
   source: LibraryMaterialSource;
-  metadata: string;
+  metadata: Record<string, any>;
   name: string;
   description?: string;
-  category_id: number;
-  tags?: string;
-  created_at: string;
+  categoryId: number;
+  tags?: string[];
+  createdAt: string;
 }
 
 export interface MaterialMetadata {

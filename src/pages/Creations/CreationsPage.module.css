@@ -1,0 +1,148 @@
+.container {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  overflow: hidden;
+  gap: 16px;
+  width: 100%;
+  background-color: #f5f7fa;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.left {
+  width: 25%;
+  min-width: 260px;
+  max-width: 300px;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.left:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.right {
+  flex: 1;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 0;
+}
+
+.split {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.detail {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px 24px;
+  transition: all 0.3s ease;
+}
+
+.detail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.chat {
+  width: 420px;
+  min-width: 350px;
+  max-width: 50%;
+  height: 100%;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.chat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.chatFull {
+  flex: 1;
+  min-height: 0;
+  flex-shrink: 0;
+  display: flex;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+}
+
+.chatFull:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* 滚动条样式 */
+.left::-webkit-scrollbar,
+.detail::-webkit-scrollbar,
+.chat::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left::-webkit-scrollbar-track,
+.detail::-webkit-scrollbar-track,
+.chat::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.left::-webkit-scrollbar-thumb,
+.detail::-webkit-scrollbar-thumb,
+.chat::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.left::-webkit-scrollbar-thumb:hover,
+.detail::-webkit-scrollbar-thumb:hover,
+.chat::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}

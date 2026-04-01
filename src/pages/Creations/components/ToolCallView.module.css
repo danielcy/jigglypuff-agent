@@ -1,0 +1,27 @@
+.container {
+  background-color: #f0f5ff;
+  border: 1px solid #d9ecff;
+  border-radius: 12px;
+  margin: 8px 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  max-width: 300px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+}
+
+.pre {
+  background-color: #f5f5f5;
+  padding: 6px 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 11px;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
