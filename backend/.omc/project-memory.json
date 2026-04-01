@@ -164,14 +164,14 @@
   "hotPaths": [
     {
       "path": "src/controllers/creations.ts",
-      "accessCount": 40,
-      "lastAccessed": 1775035797973,
+      "accessCount": 54,
+      "lastAccessed": 1775051414234,
       "type": "file"
     },
     {
       "path": "src/agents/runAgent.ts",
-      "accessCount": 31,
-      "lastAccessed": 1775035918535,
+      "accessCount": 39,
+      "lastAccessed": 1775050995686,
       "type": "file"
     },
     {
@@ -199,6 +199,12 @@
       "type": "file"
     },
     {
+      "path": "src",
+      "accessCount": 5,
+      "lastAccessed": 1775050429861,
+      "type": "directory"
+    },
+    {
       "path": "src/types/index.ts",
       "accessCount": 4,
       "lastAccessed": 1775032080525,
@@ -215,12 +221,6 @@
       "accessCount": 4,
       "lastAccessed": 1775032252173,
       "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 4,
-      "lastAccessed": 1775033899549,
-      "type": "directory"
     },
     {
       "path": "src/agents/types.ts",
@@ -250,6 +250,18 @@
       "path": "src/tools/analysisSaveTool.ts",
       "accessCount": 3,
       "lastAccessed": 1775034759099,
+      "type": "file"
+    },
+    {
+      "path": "src/utils/fileUtils.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775048670767,
+      "type": "file"
+    },
+    {
+      "path": "src/tools/forkSubagentTool.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775050974730,
       "type": "file"
     },
     {
@@ -328,12 +340,6 @@
       "path": "src/agents/forkSubagent.ts",
       "accessCount": 1,
       "lastAccessed": 1775030627834,
-      "type": "file"
-    },
-    {
-      "path": "src/tools/forkSubagentTool.ts",
-      "accessCount": 1,
-      "lastAccessed": 1775030645537,
       "type": "file"
     },
     {

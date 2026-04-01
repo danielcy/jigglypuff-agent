@@ -18,6 +18,7 @@ dist-ssr
 *.local
 
 # Data - SQLite database and downloaded resources
+data
 data/*.db
 data/resources/**/*
 data/uploads/**/*
@@ -55,13 +56,17 @@ coverage
 .cache
 
 # Superpowers
+.superpowers
 */superpowers
 spec
 docs/specs
+docs
 
 # claude
 .claude
 .omc
+*/.omc
+backend/.omc
 .playwright-cli
 
 #trae

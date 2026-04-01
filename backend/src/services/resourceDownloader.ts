@@ -29,7 +29,7 @@ export async function startDownload(resource: Resource): Promise<void> {
   const publicUrl = `/resources/${resource.platform}/${filename}`;
 
   const downloadUrl = resource.platform === 'xiaohongshu' 
-    ? `https://www.xiaohongshu.com/explore/${resource.itemId}`
+    ? resource.originalUrl
     : `https://www.bilibili.com/video/${resource.itemId}`;
 
   resourceDao.updateResourceStatus(resource.id, 'downloading');

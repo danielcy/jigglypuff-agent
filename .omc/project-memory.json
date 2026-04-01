@@ -217,21 +217,39 @@
   },
   "hotPaths": [
     {
+      "path": "backend/src/controllers/creations.ts",
+      "accessCount": 28,
+      "lastAccessed": 1775049587015,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/components/ChatWindow.tsx",
+      "accessCount": 24,
+      "lastAccessed": 1775045912033,
+      "type": "file"
+    },
+    {
       "path": "src/pages/Creations/CreationsPage.module.css",
       "accessCount": 20,
       "lastAccessed": 1775012988808,
       "type": "file"
     },
     {
-      "path": "src/pages/Creations/components/ChatWindow.tsx",
+      "path": "backend/src/agents/baseAgent.ts",
       "accessCount": 14,
-      "lastAccessed": 1775023101367,
+      "lastAccessed": 1775045273653,
       "type": "file"
     },
     {
-      "path": "backend/src/controllers/creations.ts",
+      "path": "src/types/index.ts",
       "accessCount": 11,
-      "lastAccessed": 1775025177736,
+      "lastAccessed": 1775045074738,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Creations/hooks/useCreationChat.ts",
+      "accessCount": 11,
+      "lastAccessed": 1775048103118,
       "type": "file"
     },
     {
@@ -241,15 +259,15 @@
       "type": "file"
     },
     {
-      "path": "src/pages/Creations/components/ToolCallView.tsx",
-      "accessCount": 9,
-      "lastAccessed": 1775023112178,
+      "path": "src/pages/Creations/components/ChatMessage.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1775045823338,
       "type": "file"
     },
     {
-      "path": "src/pages/Creations/hooks/useCreationChat.ts",
-      "accessCount": 8,
-      "lastAccessed": 1775013268270,
+      "path": "src/pages/Creations/components/ToolCallView.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1775023112178,
       "type": "file"
     },
     {
@@ -277,27 +295,9 @@
       "type": "file"
     },
     {
-      "path": "backend/src/agents/baseAgent.ts",
-      "accessCount": 6,
-      "lastAccessed": 1775026372645,
-      "type": "file"
-    },
-    {
-      "path": "src/types/index.ts",
-      "accessCount": 6,
-      "lastAccessed": 1775037735174,
-      "type": "file"
-    },
-    {
       "path": "backend/src/controllers/mcpConfig.ts",
       "accessCount": 5,
       "lastAccessed": 1774964264846,
-      "type": "file"
-    },
-    {
-      "path": "src/pages/Creations/components/ChatMessage.tsx",
-      "accessCount": 5,
-      "lastAccessed": 1775009408876,
       "type": "file"
     },
     {
@@ -346,6 +346,12 @@
       "path": "src/pages/Creations/components/ProjectList.tsx",
       "accessCount": 4,
       "lastAccessed": 1775038360046,
+      "type": "file"
+    },
+    {
+      "path": "backend/src/types/index.ts",
+      "accessCount": 4,
+      "lastAccessed": 1775045228423,
       "type": "file"
     },
     {
@@ -445,6 +451,18 @@
       "type": "file"
     },
     {
+      "path": "backend/src/agents/types.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775045138687,
+      "type": "file"
+    },
+    {
+      "path": "vite.config.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775048088833,
+      "type": "file"
+    },
+    {
       "path": "package.json",
       "accessCount": 1,
       "lastAccessed": 1774963675403,
@@ -454,12 +472,6 @@
       "path": "create_center_design.md",
       "accessCount": 1,
       "lastAccessed": 1774963684709,
-      "type": "file"
-    },
-    {
-      "path": "vite.config.ts",
-      "accessCount": 1,
-      "lastAccessed": 1774963690189,
       "type": "file"
     },
     {
@@ -502,18 +514,6 @@
       "path": "agent_reconstruction_plan.md",
       "accessCount": 1,
       "lastAccessed": 1775026216537,
-      "type": "file"
-    },
-    {
-      "path": "backend/src/types/index.ts",
-      "accessCount": 1,
-      "lastAccessed": 1775026348778,
-      "type": "file"
-    },
-    {
-      "path": "backend/src/agents/types.ts",
-      "accessCount": 1,
-      "lastAccessed": 1775026404547,
       "type": "file"
     }
   ],

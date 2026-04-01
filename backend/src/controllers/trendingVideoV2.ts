@@ -61,7 +61,7 @@ function convertToTrendingVideo(unity: UnifiedSearchResult): TrendingVideo {
   let originalUrl: string | undefined;
 
   if (unity.platform === 'xiaohongshu') {
-    originalUrl = `https://www.xiaohongshu.com/explore/${unity.id}`;
+    originalUrl = `https://www.xiaohongshu.com/explore/${unity.id}?xsec_token=${unity.xsecToken}&source=pc_feed`;
   } else if (unity.platform === 'bilibili') {
     originalUrl = `https://www.bilibili.com/video/${unity.id}`;
   }

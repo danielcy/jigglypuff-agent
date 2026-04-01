@@ -1,1 +1,4 @@
 {"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:systematic-debugging"}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:systematic-debugging"}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:executing-plans"}
+{"t":0,"agent":"aabe6c9","agent_type":"planner","event":"agent_start","parent_mode":"none"}
