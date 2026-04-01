@@ -4,7 +4,10 @@ import type { Tool } from '../types';
 
 export interface AgentMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
-  content: string;
+  content: string | Array<{
+    type: string;
+    [key: string]: any;
+  }>;
   toolCalls?: AgentToolCall[];
   toolCallId?: string;
   name?: string;
@@ -123,6 +126,13 @@ export abstract class BaseAgent {
           })),
         };
       }
+      // 新增: 支持 content 为数组 (多模态)
+      if (Array.isArray(msg.content)) {
+        return {
+          role: msg.role,
+          content: msg.content,
+        };
+      }
       return {
         role: msg.role,
         content: msg.content,
@@ -206,7 +216,7 @@ export abstract class BaseAgent {
         if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
           content = `正在调用工具: ${llmResponse.toolCalls.map(tc => tc.name).join(', ')}`;
         } else {
-          content = llmResponse.content;
+          content = llmResponse.content as string;
         }
         this.onStep(step + 1, content, !llmResponse.toolCalls);
         // Yield to event loop to allow SSE buffer to flush
@@ -217,7 +227,7 @@ export abstract class BaseAgent {
         console.log(`[Agent Debug] Execution finished: no more tool calls needed`);
         return {
           shouldStop: true,
-          finalAnswer: llmResponse.content,
+          finalAnswer: llmResponse.content as string,
           messages: this.messages,
         };
       }

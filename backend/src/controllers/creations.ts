@@ -288,7 +288,7 @@ Please: continue working based on the existing todo list above. Update progress 
         .map(msg => ({
           id: Date.now().toString() + Math.random().toString(36).substr(2),
           role: msg.role,
-          content: msg.content,
+          content: msg.content as string,
           toolName: msg.name,
           toolArgs: msg.toolCalls?.[0]?.arguments,
           timestamp: new Date(),

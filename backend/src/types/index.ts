@@ -81,6 +81,12 @@ export interface ChatMessage {
   toolName?: string;
   toolArgs?: Record<string, any>;
   timestamp: Date;
+  attachments?: Array<{
+    id: number;
+    name: string;
+    url: string;
+    type: 'image' | 'video';
+  }>;
 }
 
 export type CreationStatus = 'draft' | 'in_progress' | 'completed';

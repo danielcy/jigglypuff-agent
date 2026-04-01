@@ -124,6 +124,13 @@ async function callLLM(
         } as const)),
       } as const;
     }
+    // 新增: 支持 content 为数组 (多模态)
+    if (Array.isArray(msg.content)) {
+      return {
+        role: msg.role,
+        content: msg.content,
+      } as const;
+    }
     return {
       role: msg.role,
       content: msg.content,
@@ -327,7 +334,7 @@ export async function runAgent(
         if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
           content = `正在调用工具: ${llmResponse.toolCalls.map(tc => tc.name).join(', ')}`;
         } else {
-          content = llmResponse.content;
+          content = llmResponse.content as string;
         }
         context.onStep(step + 1, content, !llmResponse.toolCalls);
         // Yield to event loop to allow SSE buffer to flush
@@ -347,7 +354,7 @@ export async function runAgent(
         return {
           success: true,
           messages: newMessages,
-          finalAnswer: llmResponse.content,
+          finalAnswer: llmResponse.content as string,
         };
       }
 
