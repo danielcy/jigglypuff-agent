@@ -6,6 +6,63 @@ import { agentRegistry, createAgentContext, runAgent } from '../agents';
 import type { Creation, SSEEvent, SSEStepEvent, Pet } from '../types';
 import type { AgentMessage } from '../agents/baseAgent';
 
+/**
+ * Cached active agent execution for reconnect support
+ * When user disconnects and reconnects while agent is still running,
+ * we can send the cached steps and continue streaming
+ */
+interface CachedStep {
+  step: number;
+  content: string;
+  streaming: boolean;
+}
+
+interface ActiveExecution {
+  creationId: string;
+  isRunning: boolean;
+  isCompleted: boolean;
+  cachedSteps: CachedStep[];
+  result: {
+    success: boolean;
+    finalAnswer?: string;
+    error?: string;
+  } | null;
+  // Waiters for new connection to subscribe to events
+  subscribers: ((event: { type: 'step' | 'complete' | 'error', data: any }) => void)[];
+}
+
+// Global in-memory cache of active agent executions
+const activeAgentExecutions = new Map<string, ActiveExecution>();
+
+/**
+ * Get or create an active execution cache for a creation
+ */
+function getOrCreateActiveExecution(creationId: string): ActiveExecution {
+  let execution = activeAgentExecutions.get(creationId);
+  if (!execution) {
+    execution = {
+      creationId,
+      isRunning: false,
+      isCompleted: false,
+      cachedSteps: [],
+      result: null,
+      subscribers: [],
+    };
+    activeAgentExecutions.set(creationId, execution);
+  }
+  return execution;
+}
+
+/**
+ * Clear cached execution after completion or timeout
+ */
+function clearActiveExecution(creationId: string) {
+  // Keep it in cache for 5 minutes after completion for late reconnects
+  setTimeout(() => {
+    activeAgentExecutions.delete(creationId);
+  }, 5 * 60 * 1000);
+}
+
 export function listCreations(req: Request, res: Response) {
   try {
     const creations = creationDao.getAllCreations();
@@ -188,13 +245,51 @@ export async function chat(req: Request, res: Response) {
       }
     };
 
-    const onStep = (step: number, content: string, streaming?: boolean) => {
-      sendSSE('step', {
-        step,
-        content,
-        streaming: !!streaming,
+    // Get or create active execution cache
+    const activeExecution = getOrCreateActiveExecution(id as string);
+
+    // Logic:
+    // - If there's an active running execution: this is a reconnect → send cached steps and subscribe
+    // - If already completed but this is a new request: start fresh execution (user sent a new message)
+    // - Only return cached result if it's a reconnect to completed but no new message?
+    // → Actually: every chat request has a user message, this means it's always a new execution
+    // → So only reuse running execution for reconnect
+
+    // If already running: this is a reconnect, send cached steps and subscribe
+    if (activeExecution.isRunning) {
+      // Send all cached steps first
+      for (const cachedStep of activeExecution.cachedSteps) {
+        sendSSE('step', {
+          step: cachedStep.step,
+          content: cachedStep.content,
+          streaming: cachedStep.streaming,
+        });
+      }
+      // Subscribe to future events
+      activeExecution.subscribers.push((event: { type: 'step' | 'complete' | 'error', data: any }) => {
+        if (event.type === 'step') {
+          sendSSE('step', event.data);
+        } else if (event.type === 'complete') {
+          sendSSE('result', {
+            type: 'complete',
+            creation,
+            message: event.data.finalAnswer,
+          });
+          res.end();
+        } else if (event.type === 'error') {
+          sendSSE('error', { message: event.data.message });
+          res.end();
+        }
       });
-    };
+      return;
+    }
+
+    // For any completed or not started situation: start a fresh execution
+    // This handles: new conversation / reconnect after completion but with new user message
+    activeExecution.isRunning = true;
+    activeExecution.isCompleted = false;
+    activeExecution.cachedSteps = [];
+    activeExecution.result = null;
 
     // Get agent definition from registry
     const agentDef = agentRegistry.getAgent(agentType || 'lead');
@@ -205,7 +300,12 @@ export async function chat(req: Request, res: Response) {
           message: `Agent type '${agentType}' not found`,
         });
       } else {
-        res.write(`event: error\ndata: ${JSON.stringify({ message: `Agent type '${agentType}' not found` })}\n\n`);
+        const errorMsg = `Agent type '${agentType}' not found`;
+        activeExecution.isRunning = false;
+        activeExecution.isCompleted = true;
+        activeExecution.result = { success: false, error: errorMsg };
+        sendSSE('error', { message: errorMsg });
+        clearActiveExecution(id as string);
         res.end();
       }
       return;
@@ -257,12 +357,24 @@ Please: continue working based on the existing todo list above. Update progress 
 ` : ''}User message: ${message}`;
     }
 
+    // Caching onStep: cache step and notify all subscribers
+    const cachedOnStep = (step: number, content: string, streaming?: boolean) => {
+      // Cache the step
+      activeExecution.cachedSteps.push({ step, content, streaming: !!streaming });
+      // Send to current connection
+      sendSSE('step', { step, content, streaming: !!streaming });
+      // Notify all other subscribed connections (reconnects)
+      for (const subscriber of activeExecution.subscribers) {
+        subscriber({ type: 'step', data: { step, content, streaming: !!streaming } });
+      }
+    };
+
     // Create agent context
     const context = createAgentContext(undefined, {
       creation,
       llmConfig: defaultConfig,
       agentDef,
-      onStep,
+      onStep: cachedOnStep,
     });
 
     // Load existing chat history - messages will be added to context by runAgent
@@ -305,18 +417,27 @@ Please: continue working based on the existing todo list above. Update progress 
       ...newMessages
     ];
 
+    // Update active execution state
+    activeExecution.isRunning = false;
+    activeExecution.isCompleted = true;
+    activeExecution.result = {
+      success: result.success,
+      finalAnswer: result.finalAnswer,
+      error: result.error,
+    };
+
     // Check if final answer is empty
     if (!result.finalAnswer || result.finalAnswer.trim().length === 0) {
+      const errorMsg = 'Agent returned an empty response, please try again';
       console.warn(`[Agent Debug] Final answer is empty for creation ${id}, agentType ${agentType}`);
-      if (!res.headersSent) {
-        res.status(500).json({
-          code: 1,
-          message: 'Agent returned an empty response, please try again',
-        });
-      } else {
-        res.write(`event: error\ndata: ${JSON.stringify({ message: 'Agent returned an empty response, please try again' })}\n\n`);
-        res.end();
+      activeExecution.result.error = errorMsg;
+      sendSSE('error', { message: errorMsg });
+      // Notify all subscribers
+      for (const subscriber of activeExecution.subscribers) {
+        subscriber({ type: 'error', data: { message: errorMsg } });
       }
+      clearActiveExecution(id as string);
+      res.end();
       return;
     }
 
@@ -330,22 +451,42 @@ Please: continue working based on the existing todo list above. Update progress 
       });
     }
 
-    sendSSE('result', {
+    const finalResult = {
       type: 'complete',
       creation,
       message: result.finalAnswer,
-    });
+    };
 
+    sendSSE('result', finalResult);
+
+    // Notify all subscribers
+    for (const subscriber of activeExecution.subscribers) {
+      subscriber({ type: 'complete', data: { finalAnswer: result.finalAnswer } });
+    }
+
+    clearActiveExecution(id as string);
     res.end();
   } catch (error) {
     console.error('Chat error:', error);
+    const { id } = req.params;
+    const activeExecution = getOrCreateActiveExecution(id as string);
+    activeExecution.isRunning = false;
+    activeExecution.isCompleted = true;
+    activeExecution.result = { success: false, error: (error as Error).message };
+
     if (!res.headersSent) {
       res.status(500).json({
         code: 1,
         message: (error as Error).message,
       });
     } else {
-      res.write(`event: error\ndata: ${JSON.stringify({ message: (error as Error).message })}\n\n`);
+      const errorMsg = (error as Error).message;
+      res.write(`event: error\ndata: ${JSON.stringify({ message: errorMsg })}\n\n`);
+      // Notify all subscribers
+      for (const subscriber of activeExecution.subscribers) {
+        subscriber({ type: 'error', data: { message: errorMsg } });
+      }
+      clearActiveExecution(id as string);
       res.end();
     }
   }

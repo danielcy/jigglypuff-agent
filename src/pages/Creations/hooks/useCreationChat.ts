@@ -163,7 +163,7 @@ export const useCreationChat = ({ creationId, agentType, initialMessages, onComp
 
   // Update messages when initialMessages changes (when loading a new creation)
   useEffect(() => {
-    if (initialMessages) {
+    if (initialMessages && initialMessages.length > 0) {
       console.log('[Chat SSE] Setting initial messages:', initialMessages);
       setMessages(initialMessages);
     }

@@ -15,16 +15,17 @@ import toolRegistry from '../tools/toolRegistry';
 import { LocalToolClient } from '../tools/localToolClient';
 import type { LLMConfig } from '../types';
 import type { Tool } from '../types';
+import { convertAttachmentToBase64 } from '../utils/fileUtils';
 
 /**
  * Build the initial messages array with system prompt and user input
  */
-function buildInitialMessages(
+async function buildInitialMessages(
   agentDef: AgentDefinition,
   context: AgentContext,
   userInput: string,
   attachments?: any[]
-): AgentMessage[] {
+): Promise<AgentMessage[]> {
   const systemPrompt = typeof agentDef.systemPrompt === 'function'
     ? agentDef.systemPrompt()
     : agentDef.systemPrompt;
@@ -50,7 +51,12 @@ function buildInitialMessages(
       { type: 'text', text: userInput }
     ];
 
-    for (const attachment of attachments) {
+    // Convert attachments to base64 before sending to LLM
+    const convertedAttachments = await Promise.all(
+      attachments.map(convertAttachmentToBase64)
+    );
+
+    for (const attachment of convertedAttachments) {
       if (attachment.type === 'image') {
         content.push({
           type: 'image_url',
@@ -60,8 +66,8 @@ function buildInitialMessages(
         });
       } else if (attachment.type === 'video') {
         content.push({
-          type: 'image_url', // 目前大多数大模型使用 image_url 类型处理视频
-          image_url: {
+          type: 'video_url', // 目前大多数大模型使用 video_url 类型处理视频
+          video_url: {
             url: attachment.url
           }
         });
@@ -91,10 +97,6 @@ function buildAvailableTools(context: AgentContext): AgentAvailableTool[] {
   const localTools = toolRegistry
     .getAllTools()
     .filter(tool => context.allowedTools.has(tool.name));
-
-  if (localTools.length === 0) {
-    return [];
-  }
 
   const client = new LocalToolClient(async (toolName: string, args: Record<string, any>) => {
     const foundTool = toolRegistry.getTool(toolName);
@@ -185,60 +187,76 @@ async function callLLM(
     } as const));
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 600000);
+  const maxRetries = 3;
+  let lastError: Error | null = null;
 
-  try {
-    const response = await fetch(
-      `${llmConfig.baseUrl.replace(/\/$/, '')}/chat/completions`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${llmConfig.apiKey}`,
+  for (let retry = 0; retry < maxRetries; retry++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000);
+
+    try {
+      console.log(`[Agent Debug] LLM attempt ${retry + 1}/${maxRetries}`);
+
+      const response = await fetch(
+        `${llmConfig.baseUrl.replace(/\/$/, '')}/chat/completions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${llmConfig.apiKey}`,
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
         },
-        body: JSON.stringify(body),
-        signal: controller.signal,
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`LLM request failed: ${response.status} ${errorText}`);
       }
-    );
 
-    clearTimeout(timeoutId);
+      const data = await response.json() as any;
+      const choice = data.choices[0];
+      const msg = choice.message;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`LLM request failed: ${response.status} ${errorText}`);
-    }
+      console.log(`[Agent Debug] LLM response (attempt ${retry + 1}): has_content=${!!msg.content}, content_length=${msg.content?.length}, has_tool_calls=${!!msg.tool_calls}, tool_calls_count=${msg.tool_calls?.length}`);
 
-    const data = await response.json() as any;
-    const choice = data.choices[0];
-    const msg = choice.message;
+      if (msg.tool_calls && msg.tool_calls.length > 0) {
+        return {
+          role: 'assistant',
+          content: msg.content || '',
+          toolCalls: msg.tool_calls.map((tc: any) => ({
+            id: tc.id,
+            name: tc.function.name,
+            arguments: JSON.parse(tc.function.arguments),
+          })),
+        };
+      }
 
-    console.log(`[Agent Debug] LLM response: has_content=${!!msg.content}, content_length=${msg.content?.length}, has_tool_calls=${!!msg.tool_calls}, tool_calls_count=${msg.tool_calls?.length}`);
+      if (!msg.content || msg.content.trim().length === 0) {
+        console.warn(`[Agent Debug] LLM returned empty content (no tool calls) on attempt ${retry + 1}`);
+      }
 
-    if (msg.tool_calls && msg.tool_calls.length > 0) {
       return {
         role: 'assistant',
         content: msg.content || '',
-        toolCalls: msg.tool_calls.map((tc: any) => ({
-          id: tc.id,
-          name: tc.function.name,
-          arguments: JSON.parse(tc.function.arguments),
-        })),
       };
-    }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      lastError = error as Error;
+      console.error(`[Agent Debug] LLM attempt ${retry + 1} failed: ${lastError.message}`);
 
-    if (!msg.content || msg.content.trim().length === 0) {
-      console.warn(`[Agent Debug] LLM returned empty content (no tool calls)`);
+      // If not last retry, wait a bit before retrying
+      if (retry < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retry + 1)));
+      }
     }
-
-    return {
-      role: 'assistant',
-      content: msg.content || '',
-    };
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
   }
+
+  // All retries failed
+  throw lastError!;
 }
 
 /**
@@ -247,7 +265,8 @@ async function callLLM(
 async function callTool(
   toolName: string,
   args: Record<string, any>,
-  availableTools: AgentAvailableTool[]
+  availableTools: AgentAvailableTool[],
+  messages: AgentMessage[]
 ): Promise<any> {
   console.log(`[Agent Debug] Calling tool: ${toolName}, args=${JSON.stringify(args)}`);
   for (const { client, tools } of availableTools) {
@@ -255,11 +274,45 @@ async function callTool(
     if (found) {
       const result = await client.callTool(toolName, args);
       console.log(`[Agent Debug] Tool ${toolName} completed: result length=${JSON.stringify(result).length} chars`);
+      // If tool returns subagentMessages (fork_subagent), push them all to messages so they are saved to chatHistory
+      const resultWithSubagent = result as { subagentMessages?: Array<{
+        role: string;
+        content: string;
+        toolName?: string;
+        toolArgs?: Record<string, any>;
+        toolCallId?: string;
+      }> };
+      if (resultWithSubagent.subagentMessages && Array.isArray(resultWithSubagent.subagentMessages)) {
+        console.log(`[Agent Debug] Tool ${toolName} returning ${resultWithSubagent.subagentMessages.length} subagent messages, adding to chatHistory`);
+        resultWithSubagent.subagentMessages.forEach((msg: {
+          role: string;
+          content: string;
+          toolName?: string;
+          toolArgs?: Record<string, any>;
+          toolCallId?: string;
+        }) => {
+          let toolCalls: AgentToolCall[] | undefined;
+          if (msg.toolName && msg.toolArgs) {
+            toolCalls = [{
+              id: Date.now().toString() + Math.random(),
+              name: msg.toolName,
+              arguments: msg.toolArgs,
+            }];
+          }
+          messages.push({
+            role: msg.role as any,
+            content: msg.content,
+            name: msg.toolName,
+            toolCalls,
+            toolCallId: msg.toolCallId,
+          });
+        });
+      }
       return result;
     }
   }
   console.error(`[Agent Debug] Tool ${toolName} not found in available tools`);
-  throw new Error(`Tool ${toolName} not found in available tools`);
+  throw new Error(`Tool ${toolName} not found`);
 }
 
 /**
@@ -336,7 +389,7 @@ export async function runAgent(
   }
 
   // Add the current user input AFTER loading existing history - use buildInitialMessages to handle attachments
-  const initialMessages = buildInitialMessages(agentDef, context, userInput, attachments);
+  const initialMessages = await buildInitialMessages(agentDef, context, userInput, attachments);
   // 只添加最后一个用户消息，因为前面的系统提示已经添加过了
   const lastMessage = initialMessages[initialMessages.length - 1];
   if (lastMessage) {
@@ -395,7 +448,7 @@ export async function runAgent(
       // Execute each tool call
       for (const toolCall of llmResponse.toolCalls) {
         try {
-          const result = await callTool(toolCall.name, toolCall.arguments, availableTools);
+          const result = await callTool(toolCall.name, toolCall.arguments, availableTools, messages);
           messages.push({
             role: 'tool',
             content: JSON.stringify(result),

@@ -489,7 +489,12 @@ const InspirationPage: React.FC = () => {
               rules={[{ required: true, message: '请选择类目' }]}
             >
               <div style={{ display: 'flex', gap: 8 }}>
-                <Select placeholder="请选择类目" style={{ flex: 1 }}>
+                <Select
+                  placeholder="请选择类目"
+                  style={{ flex: 1 }}
+                  value={addForm.getFieldValue('category_id')}
+                  onChange={(value) => addForm.setFieldValue('category_id', value)}
+                >
                   {categories.map(c => (
                     <Select.Option key={c.id} value={c.id}>
                       {c.name}
