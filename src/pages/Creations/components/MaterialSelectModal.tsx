@@ -237,10 +237,22 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
                 onClick={() => toggleSelect(mat)}
               >
                 <div className={styles.imageWrapper}>
-                  <img src={getCoverUrl(mat)} alt={mat.name} />
+                  {mat.type === 'image' ? (
+                    <img src={getCoverUrl(mat)} alt={mat.name} />
+                  ) : (
+                    <video
+                      src={getCoverUrl(mat)}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      muted
+                      preload="metadata"
+                    />
+                  )}
                   <div className={styles.previewButton} onClick={(e) => {
                     e.stopPropagation();
-                    window.open(getCoverUrl(mat), '_blank');
+                    const url = mat.type === 'image'
+                      ? getCoverUrl(mat)
+                      : (mat.metadata.videoUrl || mat.metadata.coverUrl);
+                    window.open(getFullUrl(url), '_blank');
                   }}>
                     <EyeOutlined />
                   </div>
