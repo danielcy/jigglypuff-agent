@@ -1,7 +1,7 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
 @media (max-width: 576px) {
@@ -22,9 +22,8 @@
 
 .imageWrapper {
   position: relative;
-  width: 100%;
-  /* 固定 4:3 比例 = 高度 = 75% 宽度 */
-  padding-top: 75%;
+  width: 160px;
+  height: 120px;
   overflow: hidden;
   border-radius: 4px;
 }
@@ -56,6 +55,7 @@
 }
 
 .name {
+  width: 160px;
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
