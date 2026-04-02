@@ -1,12 +1,15 @@
 .container {
   height: 100%;
   overflow-y: auto;
+  background-color: #fafafa;
 }
 
 .card {
   height: 100%;
+  background-color: #fafafa;
 }
 
 .content {
   padding: 8px 0;
+  background-color: #fafafa;
 }
