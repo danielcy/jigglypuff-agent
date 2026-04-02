@@ -13,15 +13,6 @@
 .card {
   cursor: pointer;
   padding: 4px;
-  /* 固定卡片高度确保所有卡片大小一致 */
-  height: 220px;
-}
-
-/* 在小屏幕上调整高度 */
-@media (max-width: 576px) {
-  .card {
-    height: 200px;
-  }
 }
 
 .card.selected {
@@ -32,12 +23,15 @@
 .imageWrapper {
   position: relative;
   width: 100%;
+  /* 固定 4:3 比例 = 高度 = 75% 宽度 */
   padding-top: 75%;
   overflow: hidden;
   border-radius: 4px;
 }
 
-.imageWrapper img {
+/* 图片和视频都需要铺满并保持比例 */
+.imageWrapper img,
+.imageWrapper video {
   position: absolute;
   top: 0;
   left: 0;
@@ -67,4 +61,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-top: 4px;
+  /* 固定高度为一行，确保即使名字很长也不会撑开高度 */
+  height: 18px;
+  line-height: 18px;
 }
