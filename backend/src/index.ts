@@ -45,6 +45,9 @@ app.use('/uploads', uploadController.serveUploads());
 const resourcesRoot = path.join(__dirname, '../../data/resources');
 app.use('/resources', express.static(resourcesRoot));
 
+const productsRoot = path.join(__dirname, '../../data/products');
+app.use('/products', express.static(productsRoot));
+
 app.get('/api/proxy/image', async (req, res) => {
   const url = req.query.url as string;
   if (!url) {

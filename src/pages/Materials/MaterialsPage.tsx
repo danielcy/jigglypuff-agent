@@ -12,8 +12,9 @@ import {
   message,
   Popconfirm,
   Upload,
+  Image,
 } from 'antd';
-import type { RcFile } from 'antd/es/upload';
+import type { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface';
 import {
   PlusOutlined,
   EditOutlined,
@@ -24,11 +25,6 @@ import type { MaterialCategory, LibraryMaterial, MaterialMetadata, LibraryMateri
 import { materialCategoryApi, materialApi } from '../../services/api';
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-
-interface UploadResult {
-  url: string;
-  filename: string;
-}
 
 const MaterialsPage: React.FC = () => {
   const [categories, setCategories] = useState<MaterialCategory[]>([]);
@@ -42,9 +38,6 @@ const MaterialsPage: React.FC = () => {
   const [editingMaterial, setEditingMaterial] = useState<LibraryMaterial | null>(null);
   const [previewMaterial, setPreviewMaterial] = useState<LibraryMaterial | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [savedImageUrl, setSavedImageUrl] = useState<string>('');
-  const [savedCoverUrl, setSavedCoverUrl] = useState<string>('');
-  const [savedVideoUrl, setSavedVideoUrl] = useState<string>('');
   const [categoryForm] = Form.useForm();
   const [materialForm] = Form.useForm();
 
@@ -129,20 +122,10 @@ const MaterialsPage: React.FC = () => {
 
   const openMaterialModal = (material?: LibraryMaterial) => {
     setEditingMaterial(material || null);
-    setSavedImageUrl('');
-    setSavedCoverUrl('');
-    setSavedVideoUrl('');
+    materialForm.resetFields();
 
     if (material) {
       materialForm.setFieldsValue(material);
-      const metadata = parseMetadata(material.metadata);
-      if (material.type === 'image' && metadata.imageUrl) {
-        setSavedImageUrl(metadata.imageUrl);
-      }
-      if (material.type === 'video') {
-        if (metadata.coverUrl) setSavedCoverUrl(metadata.coverUrl);
-        if (metadata.videoUrl) setSavedVideoUrl(metadata.videoUrl);
-      }
     } else {
       materialForm.setFieldsValue({
         name: '',
@@ -182,69 +165,54 @@ const MaterialsPage: React.FC = () => {
     return true;
   };
 
-  const handleImageUpload = async (options: any) => {
-    const file = options.file as File;
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch(`${backendUrl}/api/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = (await response.json()) as UploadResult;
-      setSavedImageUrl(data.url);
+  const handleImageUploadChange = async (info: UploadChangeParam<UploadFile>) => {
+    if (info.file.status === 'uploading') {
+      setUploading(true);
+      return;
+    }
+    if (info.file.status === 'done') {
+      setUploading(false);
+      const url = info.file.response.data.url;
+      materialForm.setFieldValue('imageUrl', url);
       message.success('上传成功');
-    } catch (error) {
-      console.error('Upload failed:', error);
-      message.error('上传失败');
-    } finally {
+    }
+    if (info.file.status === 'error') {
       setUploading(false);
+      message.error('上传失败');
     }
   };
 
-  const handleCoverUpload = async (options: any) => {
-    const file = options.file as File;
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch(`${backendUrl}/api/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = (await response.json()) as UploadResult;
-      setSavedCoverUrl(data.url);
+  const handleCoverUploadChange = async (info: UploadChangeParam<UploadFile>) => {
+    if (info.file.status === 'uploading') {
+      setUploading(true);
+      return;
+    }
+    if (info.file.status === 'done') {
+      setUploading(false);
+      const url = info.file.response.data.url;
+      materialForm.setFieldValue('coverUrl', url);
       message.success('封面上传成功');
-    } catch (error) {
-      console.error('Upload failed:', error);
-      message.error('上传失败');
-    } finally {
+    }
+    if (info.file.status === 'error') {
       setUploading(false);
+      message.error('上传失败');
     }
   };
 
-  const handleVideoUpload = async (options: any) => {
-    const file = options.file as File;
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch(`${backendUrl}/api/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = (await response.json()) as UploadResult;
-      setSavedVideoUrl(data.url);
-      message.success('视频上传成功');
-    } catch (error) {
-      console.error('Upload failed:', error);
-      message.error('上传失败');
-    } finally {
+  const handleVideoUploadChange = async (info: UploadChangeParam<UploadFile>) => {
+    if (info.file.status === 'uploading') {
+      setUploading(true);
+      return;
+    }
+    if (info.file.status === 'done') {
       setUploading(false);
+      const url = info.file.response.data.url;
+      materialForm.setFieldValue('videoUrl', url);
+      message.success('视频上传成功');
+    }
+    if (info.file.status === 'error') {
+      setUploading(false);
+      message.error('上传失败');
     }
   };
 
@@ -254,24 +222,24 @@ const MaterialsPage: React.FC = () => {
       const metadata: MaterialMetadata = {};
 
       if (values.type === 'image') {
-        if (!savedImageUrl) {
+        if (!values.imageUrl) {
           message.error('请上传图片');
           return;
         }
-        metadata.imageUrl = savedImageUrl;
+        metadata.imageUrl = values.imageUrl;
       }
 
       if (values.type === 'video') {
-        if (!savedCoverUrl) {
+        if (!values.coverUrl) {
           message.error('请上传封面图');
           return;
         }
-        if (!savedVideoUrl) {
+        if (!values.videoUrl) {
           message.error('请上传视频');
           return;
         }
-        metadata.coverUrl = savedCoverUrl;
-        metadata.videoUrl = savedVideoUrl;
+        metadata.coverUrl = values.coverUrl;
+        metadata.videoUrl = values.videoUrl;
       }
 
       const data = {
@@ -326,6 +294,84 @@ const MaterialsPage: React.FC = () => {
     return tags.split(',').map(t => t.trim()).filter(Boolean);
   };
 
+  const renderImageUpload = () => {
+    const imageUrl = materialForm.getFieldValue('imageUrl');
+    return (
+      <Upload
+        name="file"
+        action={`${backendUrl}/api/upload`}
+        beforeUpload={beforeUpload}
+        onChange={handleImageUploadChange}
+        showUploadList={false}
+      >
+        {imageUrl ? (
+          <div style={{ marginBottom: 8 }}>
+            <Image
+              src={`${backendUrl}${imageUrl}`}
+              alt="已上传"
+              style={{ maxWidth: 200, maxHeight: 150, objectFit: 'contain', border: '1px solid #eee', borderRadius: 4 }}
+              preview={true}
+            />
+            <br />
+            <Button style={{ marginTop: 8 }} onClick={() => materialForm.setFieldValue('imageUrl', '')}>重新上传</Button>
+          </div>
+        ) : (
+          <Button loading={uploading} icon={<UploadOutlined />}>点击上传图片</Button>
+        )}
+      </Upload>
+    );
+  };
+
+  const renderCoverUpload = () => {
+    const coverUrl = materialForm.getFieldValue('coverUrl');
+    return (
+      <Upload
+        name="file"
+        action={`${backendUrl}/api/upload`}
+        beforeUpload={beforeUpload}
+        onChange={handleCoverUploadChange}
+        showUploadList={false}
+      >
+        {coverUrl ? (
+          <div style={{ marginBottom: 8 }}>
+            <Image
+              src={`${backendUrl}${coverUrl}`}
+              alt="已上传封面"
+              style={{ maxWidth: 200, maxHeight: 150, objectFit: 'contain', border: '1px solid #eee', borderRadius: 4 }}
+              preview={true}
+            />
+            <br />
+            <Button style={{ marginTop: 8 }} onClick={() => materialForm.setFieldValue('coverUrl', '')}>重新上传</Button>
+          </div>
+        ) : (
+          <Button loading={uploading} icon={<UploadOutlined />}>点击上传封面图</Button>
+        )}
+      </Upload>
+    );
+  };
+
+  const renderVideoUpload = () => {
+    const videoUrl = materialForm.getFieldValue('videoUrl');
+    return (
+      <Upload
+        name="file"
+        action={`${backendUrl}/api/upload`}
+        beforeUpload={beforeUpload}
+        onChange={handleVideoUploadChange}
+        showUploadList={false}
+      >
+        {videoUrl ? (
+          <div style={{ marginBottom: 8 }}>
+            <p style={{ fontSize: 12, color: '#666' }}>已上传: {videoUrl}</p>
+            <Button onClick={() => materialForm.setFieldValue('videoUrl', '')}>重新上传</Button>
+          </div>
+        ) : (
+          <Button loading={uploading} icon={<UploadOutlined />}>点击上传视频</Button>
+        )}
+      </Upload>
+    );
+  };
+
   return (
     <div style={{ height: '100%', display: 'flex', gap: 16 }}>
       <Card
@@ -369,14 +415,16 @@ const MaterialsPage: React.FC = () => {
                         e.stopPropagation();
                         openCategoryModal(category);
                       }}
-                    />
+                    >
+                      编辑
+                    </Button>
                     <Popconfirm
                       title="确定要删除这个类目吗？删除后类目下所有素材都会被删除，此操作不可撤销。"
                       onConfirm={e => {
                         e?.stopPropagation();
                         handleDeleteCategory(category.id);
                       }}
-                      okText="确定删除"
+                      okText="确定"
                       cancelText="取消"
                     >
                       <Button
@@ -385,7 +433,9 @@ const MaterialsPage: React.FC = () => {
                         danger
                         icon={<DeleteOutlined />}
                         onClick={e => e.stopPropagation()}
-                      />
+                      >
+                        删除
+                      </Button>
                     </Popconfirm>
                   </div>
                 </div>
@@ -466,14 +516,14 @@ const MaterialsPage: React.FC = () => {
                             e?.stopPropagation();
                             handleDeleteMaterial(material.id);
                           }}
-                          okText="确定删除"
+                          okText="确定"
                           cancelText="取消"
                         >
                           <Button
                             type="text"
                             danger
                             icon={<DeleteOutlined />}
-                            onClick={e => e?.stopPropagation()}
+                            onClick={e => e.stopPropagation()}
                           >
                             删除
                           </Button>
@@ -585,34 +635,30 @@ const MaterialsPage: React.FC = () => {
             <Input placeholder="多个标签用逗号分隔（可选）" />
           </Form.Item>
 
+          {/* Hidden fields to store uploaded URLs and other required fields */}
+          <Form.Item name="imageUrl" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item name="coverUrl" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item name="videoUrl" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item name="source" hidden>
+            <Input />
+          </Form.Item>
+
           <Form.Item
             noStyle
-            shouldUpdate={(prev, curr) => prev.type !== curr.type}
+            shouldUpdate={() => true}
           >
             {() => {
               const type = materialForm.getFieldValue('type') as LibraryMaterialType;
               if (type === 'image') {
                 return (
                   <Form.Item label="图片">
-                    {savedImageUrl ? (
-                      <div style={{ marginBottom: 8 }}>
-                        <img
-                          src={`${backendUrl}${savedImageUrl}`}
-                          alt="已上传"
-                          style={{ maxWidth: 200, maxHeight: 150, objectFit: 'contain', border: '1px solid #eee', borderRadius: 4 }}
-                        />
-                        <br />
-                        <Button onClick={() => setSavedImageUrl('')} style={{ marginTop: 8 }}>重新上传</Button>
-                      </div>
-                    ) : (
-                      <Upload
-                        customRequest={handleImageUpload}
-                        beforeUpload={beforeUpload}
-                        showUploadList={false}
-                      >
-                        <Button loading={uploading} icon={<UploadOutlined />}>点击上传图片</Button>
-                      </Upload>
-                    )}
+                    {renderImageUpload()}
                   </Form.Item>
                 );
               }
@@ -620,41 +666,10 @@ const MaterialsPage: React.FC = () => {
                 return (
                   <>
                     <Form.Item label="封面图">
-                      {savedCoverUrl ? (
-                        <div style={{ marginBottom: 8 }}>
-                          <img
-                            src={`${backendUrl}${savedCoverUrl}`}
-                            alt="已上传封面"
-                            style={{ maxWidth: 200, maxHeight: 150, objectFit: 'contain', border: '1px solid #eee', borderRadius: 4 }}
-                          />
-                          <br />
-                          <Button onClick={() => setSavedCoverUrl('')} style={{ marginTop: 8 }}>重新上传</Button>
-                        </div>
-                      ) : (
-                        <Upload
-                          customRequest={handleCoverUpload}
-                          beforeUpload={beforeUpload}
-                          showUploadList={false}
-                        >
-                          <Button loading={uploading} icon={<UploadOutlined />}>点击上传封面图</Button>
-                        </Upload>
-                      )}
+                      {renderCoverUpload()}
                     </Form.Item>
                     <Form.Item label="视频">
-                      {savedVideoUrl ? (
-                        <div style={{ marginBottom: 8 }}>
-                          <p style={{ fontSize: 12, color: '#666' }}>已上传: {savedVideoUrl}</p>
-                          <Button onClick={() => setSavedVideoUrl('')}>重新上传</Button>
-                        </div>
-                      ) : (
-                        <Upload
-                          customRequest={handleVideoUpload}
-                          beforeUpload={beforeUpload}
-                          showUploadList={false}
-                        >
-                          <Button loading={uploading} icon={<UploadOutlined />}>点击上传视频</Button>
-                        </Upload>
-                      )}
+                      {renderVideoUpload()}
                     </Form.Item>
                   </>
                 );
@@ -693,7 +708,7 @@ const MaterialsPage: React.FC = () => {
                   const imageUrl = metadata.imageUrl;
                   if (!imageUrl) return null;
                   return (
-                    <img
+                    <Image
                       src={imageUrl.startsWith('/') ? `${backendUrl}${imageUrl}` : imageUrl}
                       alt={previewMaterial.name}
                       style={{ maxWidth: '100%', maxHeight: '50vh', objectFit: 'contain', borderRadius: 8 }}

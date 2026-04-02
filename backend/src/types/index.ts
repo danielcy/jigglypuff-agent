@@ -162,6 +162,16 @@ export interface ShotList {
   revisedAt?: Date;
 }
 
+export type CreationProductType = 'image' | 'video';
+
+export interface CreationProduct {
+  id: string;
+  type: CreationProductType;
+  url: string;
+  prompt: string;
+  generatedAt: Date;
+}
+
 export interface SubAgentConfig {
   name: string;
   description: string;
@@ -182,6 +192,7 @@ export interface Creation {
   analysisResult?: HotVideoAnalysis;
   script?: Script;
   shots?: ShotList;
+  products?: CreationProduct[];
   createdAt: Date;
   updatedAt: Date;
 }

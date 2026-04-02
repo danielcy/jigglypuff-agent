@@ -16,6 +16,8 @@ import styles from './MaterialSelectModal.module.css';
 
 const { useBreakpoint } = Grid;
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
 interface MaterialSelectModalProps {
   open: boolean;
   onCancel: () => void;
@@ -91,10 +93,18 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
     onCancel();
   };
 
+  const getFullUrl = (url?: string) => {
+    if (!url) return '';
+    // If it's already a full URL (starts with http), use it directly
+    if (url.startsWith('http')) return url;
+    // Otherwise, it's a relative path from backend upload - add backend prefix
+    return `${backendUrl}${url}`;
+  };
+
   const getCoverUrl = (mat: LibraryMaterial) => {
     return mat.type === 'image'
-      ? mat.metadata.imageUrl!
-      : mat.metadata.coverUrl!;
+      ? getFullUrl(mat.metadata.imageUrl)
+      : getFullUrl(mat.metadata.coverUrl);
   };
 
 
@@ -104,6 +114,8 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
       open={open}
       onCancel={onCancel}
       width={800}
+      style={{ maxHeight: '70vh' }}
+      bodyStyle={{ maxHeight: 'calc(70vh - 108px)', overflowY: 'auto' }}
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>已选择: {selectedIds.size} / 5</span>
@@ -148,7 +160,6 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
                   <img src={getCoverUrl(mat)} alt={mat.name} />
                   <div className={styles.previewButton} onClick={(e) => {
                     e.stopPropagation();
-                    // TODO: 打开预览
                     window.open(getCoverUrl(mat), '_blank');
                   }}>
                     <EyeOutlined />

@@ -7,9 +7,26 @@ import styles from './ChatMessage.module.css';
 
 const { Text } = Typography;
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
 interface ChatMessageProps {
   message: ChatMessageType;
 }
+
+// Custom image component to limit maximum size
+const CustomImage = (props: any) => {
+  return (
+    <img
+      {...props}
+      style={{
+        maxWidth: '50%',
+        maxHeight: '50vh',
+        width: 'auto',
+        height: 'auto',
+      }}
+    />
+  );
+};
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isUser = message.role === 'user';
@@ -37,10 +54,21 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   }
 
   // Assistant message: no bubble, full width markdown rendering
+
+  const processContent = (content: string) => {
+    // 正则匹配类似"/products/1775122548795-11864080.png", 为它们加上HOST前缀
+    // Match any image/video extension: png, jpg, jpeg, webp, mp4, etc.
+    return content.replace(/\/products\/[0-9]+-[0-9]+\.[a-z0-9]+/g, (match) => {
+      return `${backendUrl}${match}`;
+    });
+  };
+
   return (
     <div className={`${styles.message} ${styles.assistantFullWidth}`}>
       <div className={styles.assistantMarkdown}>
-        <ReactMarkdown>{message.content}</ReactMarkdown>
+        <ReactMarkdown components={{ img: CustomImage }}>
+          {processContent(message.content)}
+        </ReactMarkdown>
         {message.toolName && (
           <div className={styles.toolName}>
             <Text type="secondary" style={{ fontSize: 12 }}>

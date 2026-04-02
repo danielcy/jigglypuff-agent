@@ -6,12 +6,14 @@ import { LEAD_AGENT } from './lead';
 import { HOT_VIDEO_ANALYZE_AGENT } from './hotVideoAnalyze';
 import { SCRIPT_AGENT } from './script';
 import { SHOT_AGENT } from './shot';
+import { VISUAL_GENERATE_AGENT } from './visualGenerate';
 
 export const builtInAgents = [
   LEAD_AGENT,
   HOT_VIDEO_ANALYZE_AGENT,
   SCRIPT_AGENT,
   SHOT_AGENT,
+  VISUAL_GENERATE_AGENT,
 ];
 
 export {
@@ -19,4 +21,5 @@ export {
   HOT_VIDEO_ANALYZE_AGENT,
   SCRIPT_AGENT,
   SHOT_AGENT,
+  VISUAL_GENERATE_AGENT,
 };

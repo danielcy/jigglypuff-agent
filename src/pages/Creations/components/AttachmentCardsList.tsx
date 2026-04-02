@@ -3,6 +3,16 @@ import { Card, Modal } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import styles from './AttachmentCardsList.module.css';
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
+const getFullUrl = (url?: string) => {
+  if (!url) return '';
+  // If it's already a full URL (starts with http), use it directly
+  if (url.startsWith('http')) return url;
+  // Otherwise, it's a relative path from backend upload - add backend prefix
+  return `${backendUrl}${url}`;
+};
+
 interface AttachmentCardsListProps {
   materials: Array<{
     id: number;
@@ -27,12 +37,14 @@ export const AttachmentCardsList: React.FC<AttachmentCardsListProps> = ({
 
   const getCoverUrl = (mat: any) => {
     // coverUrl might be at top level (from SelectedMaterialsBar) or in metadata (from saved chat history)
-    return mat.coverUrl || (mat.metadata && mat.metadata.coverUrl) || mat.url;
+    const url = mat.coverUrl || (mat.metadata && mat.metadata.coverUrl) || (mat.metadata && mat.metadata.imageUrl) || mat.url;
+    return getFullUrl(url);
   };
 
   const getContentUrl = (mat: any) => {
     // content url is: top level url (converted base64 or direct url)
-    return mat.url || (mat.metadata && mat.metadata.videoUrl) || (mat.metadata && mat.metadata.imageUrl);
+    const url = mat.url || (mat.metadata && mat.metadata.videoUrl) || (mat.metadata && mat.metadata.imageUrl);
+    return getFullUrl(url);
   };
 
   const openPreview = (mat: any) => {

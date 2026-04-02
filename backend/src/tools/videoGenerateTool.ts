@@ -1,7 +1,11 @@
 import { BaseTool } from './baseTool';
-import type { Creation } from '../types';
+import type { Creation, CreationProduct } from '../types';
 import type { AgentContext } from '../agents/types';
 import { getToolConfig } from './utils/getToolConfig';
+import * as creationDao from '../database/creationDao';
+import { v4 as uuidv4 } from 'uuid';
+import { convertAttachmentToBase64 } from '../utils/fileUtils';
+import { downloadAndSaveProduct } from '../utils/downloadUtils';
 
 /**
  * Generate video using Volcengine Seedance (Doubao) API
@@ -61,8 +65,22 @@ export class VideoGenerateTool extends BaseTool {
 
     try {
       // Step 1: Submit async generation task
-      // Reference: https://www.volcengine.com/docs/82379/1366799#_2-%E6%8F%90%E4%BA%A4%E8%A7%86%E9%A2%91%E7%94%9F%E6%88%90%E6%B1%82
-      const submitResponse = await fetch('https://visual.volcengineapi.com/api/v2/image_to_video', {
+      // Volcengine Doubao Seedance API (Ark platform)
+      // Reference: https://www.volcengine.com/docs/82379/1366799
+      // Build content array with text + optional image
+      const content: any[] = [
+        { type: 'text', text: prompt }
+      ];
+      if (imageUrl) {
+        let attachment = await convertAttachmentToBase64({type: "image", metadata: {imageUrl}})
+        let finalImageUrl = attachment.url
+        content.push({
+          type: 'image_url',
+          image_url: { url: finalImageUrl }
+        });
+      }
+
+      const submitResponse = await fetch('https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,10 +88,10 @@ export class VideoGenerateTool extends BaseTool {
         },
         body: JSON.stringify({
           model,
-          prompt,
-          first_frame_image: imageUrl,
+          content,
           duration,
-          resolution,
+          ratio: "adaptive",
+          watermark: false
         }),
       });
 
@@ -88,14 +106,14 @@ export class VideoGenerateTool extends BaseTool {
         throw new Error(submitData.error.message || submitData.error);
       }
 
-      const taskId = submitData.task_id;
+      const taskId = submitData.id;
       console.log(`[VideoGenerateTool] Task submitted: ${taskId}`);
 
       // Step 2: Poll for result
       // Poll every 5 seconds, timeout after 10 minutes (120 * 5s = 10min)
       const maxRetries = 120;
       for (let retry = 0; retry < maxRetries; retry++) {
-        const statusResponse = await fetch(`https://visual.volcengineapi.com/api/v2/get_task_result/${taskId}`, {
+        const statusResponse = await fetch(`https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks/${taskId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -115,18 +133,34 @@ export class VideoGenerateTool extends BaseTool {
           throw new Error(statusData.error.message || statusData.error);
         }
 
-        // Status: 0 = in progress, 1 = success, 2 = failed
-        if (statusData.status === 1 && statusData.video?.url) {
+        // Status: queued -> processing -> succeeded/failed
+        if (statusData.status === 'succeeded') {
+          console.log(statusData);
+        }
+        if (statusData.status === 'succeeded' && statusData.content?.video_url) {
           console.log(`[VideoGenerateTool] Task completed: ${taskId}`);
+
+          // Download video to local storage since Volcengine URLs expire after 24h
+          const localUrl = await downloadAndSaveProduct(statusData.content.video_url, 'mp4');
+          // Add product to creation
+          const newProduct: CreationProduct = {
+            id: uuidv4(),
+            type: 'video',
+            url: localUrl,
+            prompt,
+            generatedAt: new Date(),
+          };
+          creationDao.addCreationProduct(creation.id, newProduct);
+
           return {
             success: true,
-            videoUrl: statusData.video.url,
+            videoUrl: localUrl,
             requestId: taskId,
           };
         }
 
-        if (statusData.status === 2) {
-          throw new Error('Video generation failed');
+        if (statusData.status === 'failed') {
+          throw new Error('Video generation failed: ' + (statusData.error?.message || 'unknown error'));
         }
 
         // Still in progress - wait

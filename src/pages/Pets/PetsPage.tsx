@@ -104,7 +104,7 @@ const PetsPage: React.FC = () => {
     }
     if (info.file.status === 'done') {
       setUploading(false);
-      const url = `${API_BASE_URL}${info.file.response.url}`;
+      const url = `${API_BASE_URL}${info.file.response.data.url}`;
       form.setFieldValue('avatar', url);
       message.success('上传成功');
     }

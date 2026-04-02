@@ -64,12 +64,20 @@ async function buildInitialMessages(
             url: attachment.url
           }
         });
+        content.push({
+          type: 'text',
+          text: `参考图片【${attachment.name}】: ${attachment.metadata.imageUrl}`
+        });
       } else if (attachment.type === 'video') {
         content.push({
           type: 'video_url', // 目前大多数大模型使用 video_url 类型处理视频
           video_url: {
             url: attachment.url
           }
+        });
+        content.push({
+          type: 'text',
+          text: `参考视频【${attachment.name}】: ${attachment.metadata.videoUrl}`
         });
       }
     }

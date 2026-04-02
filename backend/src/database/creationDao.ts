@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { Creation, CreationTool } from '../types';
+import type { Creation, CreationTool, CreationProduct } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 export function getAllCreations(): Array<Pick<Creation, 'id' | 'title' | 'status' | 'currentStage' | 'createdAt' | 'updatedAt'>> {
@@ -36,8 +36,8 @@ export function createCreation(creation: {
   const stmt = db.prepare(`
     INSERT INTO creations (
       id, title, pet_ids, material_ids, status, current_stage, content,
-      plan, chat_history, analysis_result, script, shots, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      plan, chat_history, analysis_result, script, shots, products, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   stmt.run(
@@ -53,6 +53,7 @@ export function createCreation(creation: {
     newCreation.analysisResult ? JSON.stringify(newCreation.analysisResult) : null,
     newCreation.script ? JSON.stringify(newCreation.script) : null,
     newCreation.shots ? JSON.stringify(newCreation.shots) : null,
+    newCreation.products ? JSON.stringify(newCreation.products) : null,
     newCreation.createdAt.toISOString(),
     newCreation.updatedAt.toISOString()
   );
@@ -117,6 +118,10 @@ export function updateCreation(id: string, updates: Partial<Creation>): Creation
     fields.push('shots = ?');
     params.push(updated.shots ? JSON.stringify(updated.shots) : null);
   }
+  if (updates.products !== undefined) {
+    fields.push('products = ?');
+    params.push(updated.products ? JSON.stringify(updated.products) : null);
+  }
 
   fields.push('updated_at = ?');
   params.push(updated.updatedAt.toISOString());
@@ -129,8 +134,37 @@ export function updateCreation(id: string, updates: Partial<Creation>): Creation
 }
 
 export function deleteCreation(id: string): boolean {
+  // Delete products first to avoid foreign key constraint error
+  db.prepare('DELETE FROM creation_products WHERE creation_id = ?').run(id);
+  // Then delete the creation itself
   const result = db.prepare('DELETE FROM creations WHERE id = ?').run(id);
   return result.changes > 0;
+}
+
+export function addCreationProduct(creationId: string, product: CreationProduct): void {
+  const stmt = db.prepare(`
+    INSERT INTO creation_products (id, creation_id, type, url, prompt, generated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run(
+    product.id,
+    creationId,
+    product.type,
+    product.url,
+    product.prompt,
+    product.generatedAt.toISOString()
+  );
+}
+
+export function getCreationProducts(creationId: string): CreationProduct[] {
+  const rows = db.prepare('SELECT * FROM creation_products WHERE creation_id = ? ORDER BY generated_at').all(creationId);
+  return (rows as any[]).map((r: any) => ({
+    id: r.id,
+    type: r.type as 'image' | 'video',
+    url: r.url,
+    prompt: r.prompt,
+    generatedAt: new Date(r.generated_at),
+  }));
 }
 
 function rowToCreationList(row: any): Pick<Creation, 'id' | 'title' | 'status' | 'currentStage' | 'createdAt' | 'updatedAt'> {
@@ -208,6 +242,22 @@ function rowToCreation(row: any): Creation {
     }
   }
 
+  // Get products from JSON (backward compatibility)
+  let products: CreationProduct[] = [];
+  if (row.products) {
+    try {
+      products = JSON.parse(row.products);
+    } catch {
+      products = [];
+    }
+  }
+
+  // Also query from separate table (new scheme)
+  const productsFromTable = getCreationProducts(row.id);
+  if (productsFromTable.length > 0) {
+    products = productsFromTable;
+  }
+
   return {
     id: row.id,
     title: row.title,
@@ -221,6 +271,7 @@ function rowToCreation(row: any): Creation {
     analysisResult,
     script,
     shots,
+    products,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };

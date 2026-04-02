@@ -112,8 +112,11 @@ const CreationsPage: React.FC = () => {
   } = useCreationChat({
     creationId: selectedId || '',
     initialMessages: selectedCreation?.chatHistory || [],
-    onComplete: (updatedCreation) => {
-      setSelectedCreation(updatedCreation);
+    onComplete: () => {
+      // Reload the full creation detail to get newly added products from creation_products table
+      if (selectedId) {
+        loadCreation(selectedId);
+      }
       loadCreations();
     },
   });

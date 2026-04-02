@@ -1,7 +1,11 @@
 import { BaseTool } from './baseTool';
-import type { Creation } from '../types';
+import type { Creation, CreationProduct } from '../types';
 import type { AgentContext } from '../agents/types';
 import { getToolConfig } from './utils/getToolConfig';
+import * as creationDao from '../database/creationDao';
+import { v4 as uuidv4 } from 'uuid';
+import { convertAttachmentToBase64 } from '../utils/fileUtils';
+import { downloadAndSaveProduct } from '../utils/downloadUtils';
 
 /**
  * Generate image using Volcengine Seedream (Doubao) API
@@ -9,7 +13,7 @@ import { getToolConfig } from './utils/getToolConfig';
  */
 export class ImageGenerateTool extends BaseTool {
   name = 'generate_image';
-  description = "Generate an image using AI (Volcengine Seedream). Use this when you need to create a visual draft or reference image for the video script.";
+  description = "Generate an image using AI (Volcengine Seedream). Use this when you need to create a visual draft or reference image for the video script. Supports text-to-image and image-to-image with reference image.";
 
   inputSchema = {
     type: 'object',
@@ -18,20 +22,17 @@ export class ImageGenerateTool extends BaseTool {
         type: 'string',
         description: 'The prompt describing the image to generate, be specific about style, content, composition',
       },
-      width: {
-        type: 'number',
-        description: 'Image width in pixels, default 1024',
-      },
-      height: {
-        type: 'number',
-        description: 'Image height in pixels, default 1024',
-      },
+      imageUrl: {
+        type: 'string',
+        description: 'Reference image URL for image-to-image or reference style generation. Support local url like uploads/123.jpeg',
+      }
     },
     required: ['prompt'],
   };
 
   async execute(args: {
     prompt: string;
+    imageUrl?: string;
     width?: number;
     height?: number;
   }, creation: Creation, context?: AgentContext): Promise<{
@@ -40,7 +41,7 @@ export class ImageGenerateTool extends BaseTool {
     requestId?: string;
     error?: string;
   }> {
-    const { prompt, width = 1024, height = 1024 } = args;
+    const { prompt, imageUrl, width = 1024, height = 1024 } = args;
 
     // Get configuration from creation_tools
     const config = getToolConfig('generate_image');
@@ -54,10 +55,18 @@ export class ImageGenerateTool extends BaseTool {
     const model = config.model || 'doubao-seedream-5-0-260128';
     const apiKey = config.apiKey as string;
 
+    // Convert size to Seedream format: "widthxheight" or use 2K for larger sizes
+
+    let finalImageUrl = null
+    if (imageUrl) {
+      let attachment = await convertAttachmentToBase64({type: "image", metadata: {imageUrl}})
+      finalImageUrl = attachment.url
+    }
+
     try {
-      // Volcengine Doubao Seedream API
-      // Reference: https://www.volcengine.com/docs/82379/1824121#_1-%E8%BF%9B%E8%A1%8C%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90
-      const response = await fetch('https://visual.volcengineapi.com/api/v2/text_to_image', {
+      // Volcengine Doubao Seedream API (Ark platform)
+      // Reference: https://www.volcengine.com/docs/82379/1824121
+      const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/images/generations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,9 +75,11 @@ export class ImageGenerateTool extends BaseTool {
         body: JSON.stringify({
           model,
           prompt,
-          width,
-          height,
-          response_image_format: 'png',
+          image: finalImageUrl,
+          size: "2K",
+          output_format: 'png',
+          response_format: 'url',
+          watermark: false,
         }),
       });
 
@@ -83,23 +94,31 @@ export class ImageGenerateTool extends BaseTool {
         throw new Error(data.error.message || data.error);
       }
 
-      // The API returns image as base64 or URL
-      // According to Volcengine docs, it should be in data.image.url
-      if (data.image?.url) {
-        return {
-          success: true,
-          imageUrl: data.image.url,
-          requestId: data.request_id,
-        };
-      }
+      // The API returns images in data array
+      // According to Volcengine docs, it should be in data[0].url
+      if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        const imageData = data.data[0];
+        console.log(`[ImageGenerateTool] Received image data: ${JSON.stringify(data)}`)
+        if (imageData.url) {
+          // Download image to local storage since Volcengine URLs expire after 24h
+          const localUrl = await downloadAndSaveProduct(imageData.url, 'png');
+          // Add product to creation
+          const newProduct: CreationProduct = {
+            id: uuidv4(),
+            type: 'image',
+            url: localUrl,
+            prompt,
+            generatedAt: new Date(),
+          };
+          console.log(`[ImageGenerateTool] Adding product: ${JSON.stringify(newProduct)}. Creation ID: ${creation.id}`)
+          creationDao.addCreationProduct(creation.id, newProduct);
 
-      // If it's base64
-      if (data.image?.b64) {
-        return {
-          success: true,
-          imageUrl: `data:image/png;base64,${data.image.b64}`,
-          requestId: data.request_id,
-        };
+          return {
+            success: true,
+            imageUrl: localUrl,
+            requestId: data.created ? String(data.created) : undefined,
+          };
+        }
       }
 
       throw new Error('Unexpected API response format');

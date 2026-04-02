@@ -91,6 +91,7 @@ export function initDatabase() {
       analysis_result JSON,
       script JSON,
       shots JSON,
+      products JSON,
       created_at DATETIME NOT NULL,
       updated_at DATETIME NOT NULL
     );`,
@@ -147,17 +148,23 @@ export function initDatabase() {
       tags TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (category_id) REFERENCES material_categories(id)
+    );`,
+
+    `CREATE TABLE IF NOT EXISTS creation_products (
+      id TEXT PRIMARY KEY,
+      creation_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      url TEXT NOT NULL,
+      prompt TEXT NOT NULL,
+      generated_at DATETIME NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (creation_id) REFERENCES creations(id)
     );`
   ];
 
   createTables.forEach(sql => {
     db.exec(sql);
   });
-
-  try {
-    db.exec('ALTER TABLE creations ADD COLUMN current_stage TEXT');
-  } catch (e) {
-  }
 
   try {
     db.exec('ALTER TABLE creations ADD COLUMN chat_history JSON');
@@ -176,6 +183,11 @@ export function initDatabase() {
 
   try {
     db.exec('ALTER TABLE creations ADD COLUMN shots JSON');
+  } catch (e) {
+  }
+
+  try {
+    db.exec('ALTER TABLE creations ADD COLUMN products JSON');
   } catch (e) {
   }
 

@@ -21,6 +21,7 @@ dist-ssr
 data/*.db
 data/resources/**/*
 data/uploads/**/*
+data/products/**/*
 !data/.gitkeep
 
 # Environment variables

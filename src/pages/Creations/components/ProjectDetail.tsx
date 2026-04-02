@@ -10,13 +10,26 @@ import {
   Descriptions,
   Space,
   Alert,
+  Image,
+  Row,
+  Col,
 } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import type { Creation, HotVideoAnalysis, Script, ShotList } from '../../../types';
+import type { Creation, HotVideoAnalysis, Script, ShotList, CreationProduct } from '../../../types';
 import styles from './ProjectDetail.module.css';
 
 const { TextArea } = Input;
 const { Text } = Typography;
+
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
+const getFullUrl = (url?: string) => {
+  if (!url) return '';
+  // If it's already a full URL (starts with http), use it directly
+  if (url.startsWith('http')) return url;
+  // Otherwise, it's a relative path from backend - add backend prefix
+  return `${backendUrl}${url}`;
+};
 
 interface ProjectDetailProps {
   creation: Creation;
@@ -751,6 +764,62 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       key: 'shots',
       label: '分镜',
       children: renderShots(creation.shots),
+    });
+  }
+
+  const renderProducts = (products: CreationProduct[]) => {
+    return (
+      <div className={styles.content}>
+        <Row gutter={[16, 16]}>
+          {products.map((product) => (
+            <Col xs={24} sm={12} md={12} lg={8} key={product.id}>
+              <Card
+                size="small"
+                title={product.type === 'image' ? '图片' : '视频'}
+                hoverable
+                style={{ height: '100%' }}
+              >
+                {product.type === 'image' ? (
+                  <Image
+                    src={getFullUrl(product.url)}
+                    alt={product.prompt}
+                    width="100%"
+                    preview={{
+                      mask: '查看原图',
+                    }}
+                  />
+                ) : (
+                  <video
+                    src={getFullUrl(product.url)}
+                    controls
+                    style={{ width: '100%', maxHeight: 200 }}
+                  />
+                )}
+                <div style={{ marginTop: 12 }}>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    {product.prompt.length > 100
+                      ? `${product.prompt.slice(0, 100)}...`
+                      : product.prompt}
+                  </Typography.Text>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    {new Date(product.generatedAt).toLocaleString()}
+                  </Typography.Text>
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </div>
+    );
+  };
+
+  if (creation.products && creation.products.length > 0) {
+    tabItems.push({
+      key: 'products',
+      label: `产物 (${creation.products.length})`,
+      children: renderProducts(creation.products),
     });
   }
 
