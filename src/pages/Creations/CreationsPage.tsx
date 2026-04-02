@@ -167,6 +167,7 @@ const CreationsPage: React.FC = () => {
             <div className={styles.chat}>
               <ChatWindow
                 creationId={selectedId}
+                petIds={selectedCreation.petIds}
                 messages={messages}
                 loading={chatLoading}
                 connected={connected}

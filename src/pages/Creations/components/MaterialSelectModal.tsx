@@ -8,31 +8,71 @@ import {
   Empty,
   Spin,
   message,
+  Tabs,
 } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
-import type { LibraryMaterial, MaterialCategory } from '../../../types';
-import { materialApi, materialCategoryApi } from '../../../services/api';
+import type { LibraryMaterial, MaterialCategory, CreationProduct, Pet } from '../../../types';
+import { materialApi, materialCategoryApi, petApi, creationApi } from '../../../services/api';
 import styles from './MaterialSelectModal.module.css';
 
 const { useBreakpoint } = Grid;
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
+type TabKey = 'library' | 'products' | 'pets';
+
 interface MaterialSelectModalProps {
   open: boolean;
   onCancel: () => void;
   onConfirm: (selected: LibraryMaterial[]) => void;
   existingSelected: LibraryMaterial[];
+  creationId: string | null;
+  petIds: string[];
 }
+
+// Convert CreationProduct to LibraryMaterial format for compatibility
+const convertProductToLibrary = (product: CreationProduct): LibraryMaterial => {
+  return {
+    id: Number(product.id) || Date.now() + Math.round(Math.random() * 1E9),
+    type: product.type,
+    source: 'agent',
+    metadata: product.type === 'image'
+      ? { imageUrl: product.url }
+      : { coverUrl: product.url, videoUrl: product.url },
+    name: product.type === 'image' ? 'AI 生成图片' : 'AI 生成视频',
+    description: product.prompt,
+    categoryId: 0,
+    createdAt: new Date().toISOString(),
+  };
+};
+
+// Convert Pet to LibraryMaterial format for compatibility
+const convertPetToLibrary = (pet: Pet): LibraryMaterial => {
+  return {
+    id: Number(pet.id) || Date.now() + Math.round(Math.random() * 1E9),
+    type: 'image',
+    source: 'agent',
+    metadata: { imageUrl: pet.avatar || pet.portrait || '' },
+    name: `${pet.name} - 宠物头像`,
+    description: pet.description || '',
+    categoryId: 0,
+    createdAt: new Date().toISOString(),
+  };
+};
 
 export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
   open,
   onCancel,
   onConfirm,
   existingSelected,
+  creationId,
+  petIds,
 }) => {
+  const [activeTab, setActiveTab] = useState<TabKey>('library');
   const [categories, setCategories] = useState<MaterialCategory[]>([]);
-  const [materials, setMaterials] = useState<LibraryMaterial[]>([]);
+  const [libraryMaterials, setLibraryMaterials] = useState<LibraryMaterial[]>([]);
+  const [productMaterials, setProductMaterials] = useState<LibraryMaterial[]>([]);
+  const [petMaterials, setPetMaterials] = useState<LibraryMaterial[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(
     new Set(existingSelected.map(m => m.id))
@@ -43,7 +83,7 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
   useEffect(() => {
     if (open) {
       loadCategories();
-      loadMaterials();
+      loadTabData('library');
     }
   }, [open]);
 
@@ -56,21 +96,36 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
     }
   };
 
-  const loadMaterials = async () => {
+  const loadTabData = async (tab: TabKey) => {
     setLoading(true);
     try {
-      const data = await materialApi.getAll(selectedCategoryId || undefined);
-      setMaterials(data);
+      if (tab === 'library') {
+        const data = await materialApi.getAll(selectedCategoryId || undefined);
+        setLibraryMaterials(data);
+      } else if (tab === 'products' && creationId) {
+        const creation = await creationApi.getById(creationId);
+        if (creation.products) {
+          const converted = creation.products.map(convertProductToLibrary);
+          setProductMaterials(converted);
+        } else {
+          setProductMaterials([]);
+        }
+      } else if (tab === 'pets' && petIds.length > 0) {
+        const allPets = await petApi.getAll();
+        const filteredPets = allPets.filter(p => petIds.includes(p.id));
+        const converted = filteredPets.map(convertPetToLibrary);
+        setPetMaterials(converted);
+      }
     } catch (error) {
-      console.error('Failed to load materials', error);
+      console.error('Failed to load data', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadMaterials();
-  }, [selectedCategoryId]);
+    loadTabData(activeTab);
+  }, [activeTab, selectedCategoryId, creationId, petIds]);
 
   const toggleSelect = (material: LibraryMaterial) => {
     const newIds = new Set(selectedIds);
@@ -88,8 +143,15 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
   };
 
   const handleConfirm = () => {
-    const selected = materials.filter(m => selectedIds.has(m.id));
-    onConfirm(selected);
+    let allMaterials: LibraryMaterial[] = [];
+    if (activeTab === 'library') {
+      allMaterials = libraryMaterials.filter(m => selectedIds.has(m.id));
+    } else if (activeTab === 'products') {
+      allMaterials = productMaterials.filter(m => selectedIds.has(m.id));
+    } else {
+      allMaterials = petMaterials.filter(m => selectedIds.has(m.id));
+    }
+    onConfirm(allMaterials);
     onCancel();
   };
 
@@ -107,6 +169,11 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
       : getFullUrl(mat.metadata.coverUrl);
   };
 
+  const currentMaterials = activeTab === 'library'
+    ? libraryMaterials
+    : activeTab === 'products'
+      ? productMaterials
+      : petMaterials;
 
   return (
     <Modal
@@ -130,26 +197,39 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
         </div>
       }
     >
-      <div style={{ marginBottom: 16 }}>
-        <Select
-          allowClear
-          placeholder="选择分类"
-          style={{ width: 200 }}
-          value={selectedCategoryId}
-          onChange={setSelectedCategoryId}
-          options={[
-            { label: '全部', value: null },
-            ...categories.map(c => ({ label: c.name, value: c.id })),
-          ]}
-        />
-      </div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={key => setActiveTab(key as TabKey)}
+        style={{ marginBottom: 16 }}
+        items={[
+          { key: 'library', label: '素材库' },
+          { key: 'products', label: '当前产物' },
+          { key: 'pets', label: '宠物头像' },
+        ]}
+      />
+
+      {activeTab === 'library' && (
+        <div style={{ marginBottom: 16 }}>
+          <Select
+            allowClear
+            placeholder="选择分类"
+            style={{ width: 200 }}
+            value={selectedCategoryId}
+            onChange={setSelectedCategoryId}
+            options={[
+              { label: '全部', value: null },
+              ...categories.map(c => ({ label: c.name, value: c.id })),
+            ]}
+          />
+        </div>
+      )}
 
       <Spin spinning={loading}>
-        {materials.length === 0 ? (
+        {currentMaterials.length === 0 ? (
           <Empty description="暂无素材" />
         ) : (
           <div className={styles.grid}>
-            {materials.map(mat => (
+            {currentMaterials.map(mat => (
               <Card
                 key={mat.id}
                 hoverable

@@ -19,6 +19,7 @@ const { Text } = Typography;
 
 interface ChatWindowProps {
   creationId: string;
+  petIds: string[];
   messages: ChatMessage[];
   loading: boolean;
   connected: boolean;
@@ -26,8 +27,11 @@ interface ChatWindowProps {
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({
+  creationId,
+  petIds,
   messages,
   loading,
+  connected: _connected,
   onSendMessage,
 }) => {
   const [inputValue, setInputValue] = useState('');
@@ -154,6 +158,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           onCancel={handleCloseMaterialModal}
           onConfirm={handleConfirmMaterialSelect}
           existingSelected={selectedMaterials}
+          creationId={creationId}
+          petIds={petIds}
         />
       </div>
     </Card>
