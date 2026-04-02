@@ -169,6 +169,86 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
       : getFullUrl(mat.metadata.coverUrl);
   };
 
+  // 单独的卡片组件处理加载错误状态（Hook 不能在循环内使用）
+  const MaterialCard = ({ material }: { material: LibraryMaterial }) => {
+    const [hasError, setHasError] = useState(false);
+    const coverUrl = getCoverUrl(material);
+
+    return (
+      <Card
+        key={material.id}
+        hoverable
+        className={`${styles.card} ${selectedIds.has(material.id) ? styles.selected : ''}`}
+        onClick={() => toggleSelect(material)}
+      >
+        <div className={styles.imageWrapper}>
+          {!hasError && coverUrl && (
+            <img
+              src={coverUrl}
+              alt={material.name}
+              onError={() => setHasError(true)}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          )}
+          {hasError && material.type === 'video' && (
+            // 图片加载失败 → 说明 coverUrl 是视频文件，用 video 标签显示第一帧
+            <video
+              src={coverUrl}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+              muted
+              preload="metadata"
+            />
+          )}
+          {(hasError && material.type !== 'video') || !coverUrl && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f5f5f5',
+                color: '#999',
+              }}
+            >
+              无封面
+            </div>
+          )}
+          {(coverUrl || (hasError && material.type === 'video')) && (
+            <div className={styles.previewButton} onClick={(e) => {
+              e.stopPropagation();
+              // 预览时：图片直接打开，视频打开视频文件
+              const previewUrl = material.type === 'image'
+                ? getCoverUrl(material)
+                : (material.metadata.videoUrl || material.metadata.coverUrl);
+              window.open(getFullUrl(previewUrl), '_blank');
+            }}>
+              <EyeOutlined />
+            </div>
+          )}
+        </div>
+        <div className={styles.name}>{material.name}</div>
+      </Card>
+    );
+  };
+
   const currentMaterials = activeTab === 'library'
     ? libraryMaterials
     : activeTab === 'products'
@@ -230,62 +310,7 @@ export const MaterialSelectModal: React.FC<MaterialSelectModalProps> = ({
         ) : (
           <div className={styles.grid}>
             {currentMaterials.map(mat => (
-              <Card
-                key={mat.id}
-                hoverable
-                className={`${styles.card} ${selectedIds.has(mat.id) ? styles.selected : ''}`}
-                onClick={() => toggleSelect(mat)}
-              >
-                <div className={styles.imageWrapper}>
-                  {mat.type === 'image' ? (
-                    <img src={getCoverUrl(mat)} alt={mat.name} />
-                  ) : (
-                    <video
-                      src={getCoverUrl(mat)}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                      muted
-                      preload="metadata"
-                    />
-                  )}
-                  {getCoverUrl(mat) && (
-                    <div className={styles.previewButton} onClick={(e) => {
-                      e.stopPropagation();
-                      const url = mat.type === 'image'
-                        ? getCoverUrl(mat)
-                        : (mat.metadata.videoUrl || mat.metadata.coverUrl);
-                      window.open(getFullUrl(url), '_blank');
-                    }}>
-                      <EyeOutlined />
-                    </div>
-                  )}
-                  {!getCoverUrl(mat) && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#f5f5f5',
-                        color: '#999',
-                      }}
-                    >
-                      无头像
-                    </div>
-                  )}
-                </div>
-                <div className={styles.name}>{mat.name}</div>
-              </Card>
+              <MaterialCard key={mat.id} material={mat} />
             ))}
           </div>
         )}
