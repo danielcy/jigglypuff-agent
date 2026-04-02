@@ -9,6 +9,8 @@ import { ShellTool } from './shellTool';
 import { VideoAnalyzeTool } from './videoAnalyzeTool';
 import { FileReaderTool } from './fileReaderTool';
 import { FileEditorTool } from './fileEditorTool';
+import { ImageGenerateTool } from './imageGenerateTool';
+import { VideoGenerateTool } from './videoGenerateTool';
 
 class ToolRegistry {
   private tools: Map<string, BaseTool> = new Map();
@@ -42,6 +44,8 @@ defaultRegistry.registerTool(new ShellTool());
 defaultRegistry.registerTool(new VideoAnalyzeTool());
 defaultRegistry.registerTool(new FileReaderTool());
 defaultRegistry.registerTool(new FileEditorTool());
+defaultRegistry.registerTool(new ImageGenerateTool());
+defaultRegistry.registerTool(new VideoGenerateTool());
 
 export default defaultRegistry;
 export { ToolRegistry };

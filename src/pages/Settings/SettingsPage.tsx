@@ -4,6 +4,7 @@ import type { LLMConfig, MCPConfig, CreationTool } from '../../types';
 import { llmConfigApi, mcpConfigApi, creationToolApi } from '../../services/api';
 import LLMConfigPanel from './components/LLMConfigPanel';
 import MCPConfigPanel from './components/MCPConfigPanel';
+import AIGenerateConfigPanel from './components/AIGenerateConfigPanel';
 import { SyncOutlined } from '@ant-design/icons';
 
 const SettingsPage: React.FC = () => {
@@ -79,6 +80,10 @@ const SettingsPage: React.FC = () => {
             mcpConfigs={mcpConfigs}
             onRefresh={loadMCPConfigs}
           />
+        </Tabs.TabPane>
+
+        <Tabs.TabPane tab="AI 生成配置" key="ai-generate">
+          <AIGenerateConfigPanel onRefresh={loadCreationTools} />
         </Tabs.TabPane>
 
         <Tabs.TabPane tab="创作工具配置" key="creation-tools">

@@ -8,6 +8,8 @@ const defaultTools = [
   { toolName: 'file_reader', enabled: true },
   { toolName: 'file_editor', enabled: true },
   { toolName: 'shell', enabled: true },
+  { toolName: 'generate_image', enabled: false },
+  { toolName: 'generate_video', enabled: false },
 ];
 
 export function getAllTools(): CreationTool[] {
@@ -30,7 +32,7 @@ export function updateToolConfig(id: string, updates: Partial<CreationTool>): Cr
 
   if (updates.enabled !== undefined) {
     fields.push('enabled = ?');
-    params.push(updates.enabled);
+    params.push(updates.enabled ? 1 : 0);
   }
   if (updates.config !== undefined) {
     fields.push('config = ?');
