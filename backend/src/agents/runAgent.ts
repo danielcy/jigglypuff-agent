@@ -431,7 +431,7 @@ export async function runAgent(
         } else {
           content = llmResponse.content as string;
         }
-        context.onStep(step + 1, content, !llmResponse.toolCalls);
+        context.onStep(step + 1, { type: 'assistant_text', content }, !llmResponse.toolCalls);
         // Yield to event loop to allow SSE buffer to flush
         await new Promise(resolve => setImmediate(resolve));
       }
@@ -465,7 +465,7 @@ export async function runAgent(
           });
           // Send tool result
           if (context.onStep) {
-            context.onStep(step + 1, `工具 ${toolCall.name} 执行完成`, true);
+            context.onStep(step + 1, { type: 'assistant_text', content: `工具 ${toolCall.name} 执行完成` }, true);
             // Yield to event loop to allow SSE buffer to flush
             await new Promise(resolve => setImmediate(resolve));
           }
@@ -478,7 +478,7 @@ export async function runAgent(
             name: toolCall.name,
           });
           if (context.onStep) {
-            context.onStep(step + 1, `工具 ${toolCall.name} 执行失败: ${(error as Error).message}`, true);
+            context.onStep(step + 1, { type: 'assistant_text', content: `工具 ${toolCall.name} 执行失败: ${(error as Error).message}` }, true);
             // Yield to event loop to allow SSE buffer to flush
             await new Promise(resolve => setImmediate(resolve));
           }
@@ -491,7 +491,7 @@ export async function runAgent(
     // Reached max turns
     console.warn(`[Agent Debug] Reached maximum steps limit: ${maxTurns}`);
     if (context.onStep) {
-      context.onStep(maxTurns, `已达到最大步骤数限制 (${maxTurns})`, true);
+      context.onStep(maxTurns, { type: 'assistant_text', content: `已达到最大步骤数限制 (${maxTurns})` }, true);
       await new Promise(resolve => setImmediate(resolve));
     }
 

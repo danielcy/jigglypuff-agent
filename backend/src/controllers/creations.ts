@@ -11,9 +11,14 @@ import type { AgentMessage } from '../agents/baseAgent';
  * When user disconnects and reconnects while agent is still running,
  * we can send the cached steps and continue streaming
  */
+interface AgentStepContent {
+  type: 'assistant_text';
+  content: string;
+}
+
 interface CachedStep {
   step: number;
-  content: string;
+  content: AgentStepContent;
   streaming: boolean;
 }
 
@@ -358,7 +363,7 @@ Please: continue working based on the existing todo list above. Update progress 
     }
 
     // Caching onStep: cache step and notify all subscribers
-    const cachedOnStep = (step: number, content: string, streaming?: boolean) => {
+    const cachedOnStep = (step: number, content: AgentStepContent, streaming?: boolean) => {
       // Cache the step
       activeExecution.cachedSteps.push({ step, content, streaming: !!streaming });
       // Send to current connection

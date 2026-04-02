@@ -58,13 +58,15 @@ function buildAllowedTools(agentDef: AgentDefinition): Set<string> {
  * @param parentContext Optional parent context for forking
  * @param overrides Overrides for the new context
  */
+import type { AgentStepContent } from './types';
+
 export function createAgentContext(
   parentContext: AgentContext | undefined,
   overrides: {
     creation: Creation;
     llmConfig: LLMConfig;
     agentDef: AgentDefinition;
-    onStep?: (step: number, content: string, streaming?: boolean) => void;
+    onStep?: (step: number, content: AgentStepContent, streaming?: boolean) => void;
   }
 ): AgentContext {
   const allowedTools = buildAllowedTools(overrides.agentDef);

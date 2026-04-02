@@ -56,6 +56,14 @@ export interface CleanupHook {
 }
 
 /**
+ * Step content type for structured data
+ */
+export interface AgentStepContent {
+  type: 'assistant_text';
+  content: string;
+}
+
+/**
  * Agent execution context - isolated per agent execution
  */
 export interface AgentContext {
@@ -70,7 +78,7 @@ export interface AgentContext {
   /** Abort controller for cancellation */
   abortController: AbortController;
   /** Optional step callback for SSE streaming to frontend */
-  onStep?: (step: number, content: string, streaming?: boolean) => void;
+  onStep?: (step: number, content: AgentStepContent, streaming?: boolean) => void;
   /** Cleanup hooks to run after execution */
   cleanupHooks: CleanupHook[];
 }

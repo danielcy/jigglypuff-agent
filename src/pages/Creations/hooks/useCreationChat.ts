@@ -82,15 +82,17 @@ export const useCreationChat = ({ creationId, agentType, initialMessages, onComp
             console.log('[Stream]', eventName, data);
             if (eventName === 'step') {
               if (data.content) {
+                // data.content is now structured: { type: 'assistant_text', content: string }
+                const textContent = data.content.content;
                 setMessages(prev => {
                   const lastMessage = prev[prev.length - 1];
                   if (lastMessage?.role === 'assistant' && data.streaming) {
-                    return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + data.content }];
+                    return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + textContent }];
                   } else {
                     const assistantMessage: ChatMessage = {
                       id: uuidv4(),
                       role: 'assistant',
-                      content: data.content,
+                      content: textContent,
                       timestamp: new Date(),
                     };
                     return [...prev, assistantMessage];
