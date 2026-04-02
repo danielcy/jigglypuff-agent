@@ -13,6 +13,15 @@
 .card {
   cursor: pointer;
   padding: 4px;
+  /* 固定卡片高度确保所有卡片大小一致 */
+  height: 220px;
+}
+
+/* 在小屏幕上调整高度 */
+@media (max-width: 576px) {
+  .card {
+    height: 200px;
+  }
 }
 
 .card.selected {
