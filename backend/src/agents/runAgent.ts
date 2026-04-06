@@ -425,13 +425,14 @@ export async function runAgent(
 
       // Send step update
       if (context.onStep) {
-        let content = '';
         if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
-          content = `正在调用工具: ${llmResponse.toolCalls.map(tc => tc.name).join(', ')}`;
+          // Send structured tool call
+          context.onStep(step + 1, { type: 'tool_call', toolCalls: llmResponse.toolCalls }, true);
         } else {
-          content = llmResponse.content as string;
+          // Send assistant text response
+          const content = llmResponse.content as string;
+          context.onStep(step + 1, { type: 'assistant_text', content }, true);
         }
-        context.onStep(step + 1, { type: 'assistant_text', content }, !llmResponse.toolCalls);
         // Yield to event loop to allow SSE buffer to flush
         await new Promise(resolve => setImmediate(resolve));
       }
@@ -465,7 +466,11 @@ export async function runAgent(
           });
           // Send tool result
           if (context.onStep) {
-            context.onStep(step + 1, { type: 'assistant_text', content: `工具 ${toolCall.name} 执行完成` }, true);
+            context.onStep(step + 1, {
+              type: 'tool_result',
+              toolCallId: toolCall.id,
+              content: JSON.stringify(result),
+            }, true);
             // Yield to event loop to allow SSE buffer to flush
             await new Promise(resolve => setImmediate(resolve));
           }

@@ -4,10 +4,23 @@
  */
 
 import type { Creation, LLMConfig, Tool } from '../types';
-import type { AgentMessage, AgentToolCall } from './baseAgent';
 
-// Re-export existing base types
-export type { AgentMessage, AgentToolCall } from './baseAgent';
+export interface AgentMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string | Array<{
+    type: string;
+    [key: string]: any;
+  }>;
+  toolCalls?: AgentToolCall[];
+  toolCallId?: string;
+  name?: string;
+}
+
+export interface AgentToolCall {
+  id: string;
+  name: string;
+  arguments: Record<string, any>;
+}
 
 /**
  * MCP Server configuration - can be a reference to existing server or inline definition
@@ -56,12 +69,12 @@ export interface CleanupHook {
 }
 
 /**
- * Step content type for structured data
+ * Step content type - discriminated union for different content types
  */
-export interface AgentStepContent {
-  type: 'assistant_text';
-  content: string;
-}
+export type AgentStepContent =
+  | { type: 'assistant_text'; content: string }
+  | { type: 'tool_call'; toolCalls: AgentToolCall[] }
+  | { type: 'tool_result'; toolCallId: string; content: string };
 
 /**
  * Agent execution context - isolated per agent execution

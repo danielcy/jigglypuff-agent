@@ -48,6 +48,9 @@ app.use('/resources', express.static(resourcesRoot));
 const productsRoot = path.join(__dirname, '../../data/products');
 app.use('/products', express.static(productsRoot));
 
+const downloadsRoot = path.join(__dirname, '../../data/downloads');
+app.use('/downloads', express.static(downloadsRoot));
+
 app.get('/api/proxy/image', async (req, res) => {
   const url = req.query.url as string;
   if (!url) {

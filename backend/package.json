@@ -17,6 +17,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "multer": "^2.1.1",
+    "node-fetch": "^3.3.2",
     "react-markdown": "^10.1.0",
     "uuid": "^11.1.0",
     "zod": "^4.3.6"

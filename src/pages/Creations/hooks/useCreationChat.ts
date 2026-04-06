@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { message as antMessage } from 'antd';
-import type { ChatMessage, Creation, LibraryMaterial } from '../../../types';
+import type { ChatMessage, Creation, LibraryMaterial, AgentStepContent, AgentToolCall } from '../../../types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface UseCreationChatOptions {
@@ -82,22 +82,47 @@ export const useCreationChat = ({ creationId, agentType, initialMessages, onComp
             console.log('[Stream]', eventName, data);
             if (eventName === 'step') {
               if (data.content) {
-                // data.content is now structured: { type: 'assistant_text', content: string }
-                const textContent = data.content.content;
-                setMessages(prev => {
-                  const lastMessage = prev[prev.length - 1];
-                  if (lastMessage?.role === 'assistant' && data.streaming) {
-                    return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + textContent }];
-                  } else {
-                    const assistantMessage: ChatMessage = {
-                      id: uuidv4(),
-                      role: 'assistant',
-                      content: textContent,
-                      timestamp: new Date(),
-                    };
-                    return [...prev, assistantMessage];
-                  }
-                });
+                const content = data.content as AgentStepContent;
+                // Handle different content types
+                if (content.type === 'assistant_text') {
+                  const textContent = content.content;
+                  setMessages(prev => {
+                    const lastMessage = prev[prev.length - 1];
+                    if (lastMessage?.role === 'assistant' && data.streaming) {
+                      return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + textContent }];
+                    } else {
+                      const assistantMessage: ChatMessage = {
+                        id: uuidv4(),
+                        role: 'assistant',
+                        content: textContent,
+                        timestamp: new Date(),
+                      };
+                      return [...prev, assistantMessage];
+                    }
+                  });
+                } else if (content.type === 'tool_call') {
+                  // Tool call - add a card message showing which tools are being called
+                  const toolNames = content.toolCalls.map((tc: AgentToolCall) => tc.name).join(', ');
+                  const cardMessage: ChatMessage = {
+                    id: uuidv4(),
+                    role: 'card',
+                    content: `🔧 正在调用工具: ${toolNames}`,
+                    timestamp: new Date(),
+                    toolName: 'tool_call',
+                    toolArgs: content.toolCalls[0]?.arguments,
+                  };
+                  setMessages(prev => [...prev, cardMessage]);
+                } else if (content.type === 'tool_result') {
+                  // Tool result - add a card message with collapsible content
+                  const cardMessage: ChatMessage = {
+                    id: uuidv4(),
+                    role: 'card',
+                    content: content.content, // Store full JSON result
+                    timestamp: new Date(),
+                    toolName: 'tool_result',
+                  };
+                  setMessages(prev => [...prev, cardMessage]);
+                }
               }
             }
             if (eventName === 'result') {

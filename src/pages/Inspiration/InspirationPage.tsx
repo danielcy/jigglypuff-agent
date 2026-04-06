@@ -76,8 +76,9 @@ const InspirationPage: React.FC = () => {
       const values = await addForm.validateFields();
       setAddLoading(true);
 
+      // 直接使用原始图片URL，后端会负责下载到本地
       const metadata = JSON.stringify({
-        coverUrl: getProxiedImageUrl(currentVideo.coverUrl),
+        coverUrl: currentVideo.coverUrl,
         videoUrl: `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}${currentResource.url}`,
       });
 

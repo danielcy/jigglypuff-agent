@@ -1,23 +1,7 @@
 import type { LLMConfig } from '../types';
 import type { MCPClient } from '../services/mcpClient';
 import type { Tool } from '../types';
-
-export interface AgentMessage {
-  role: 'system' | 'user' | 'assistant' | 'tool';
-  content: string | Array<{
-    type: string;
-    [key: string]: any;
-  }>;
-  toolCalls?: AgentToolCall[];
-  toolCallId?: string;
-  name?: string;
-}
-
-export interface AgentToolCall {
-  id: string;
-  name: string;
-  arguments: Record<string, any>;
-}
+import type { AgentStepContent, AgentToolCall, AgentMessage } from './types';
 
 export interface AgentStepResult {
   shouldStop: boolean;
@@ -30,7 +14,7 @@ export interface AgentConfig {
   systemPrompt: string;
   availableTools: AgentAvailableTool[];
   maxSteps?: number;
-  onStep?: (step: number, content: string, streaming?: boolean) => void;
+  onStep?: (step: number, content: AgentStepContent, streaming?: boolean) => void;
 }
 
 export interface AgentAvailableTool {
@@ -44,7 +28,7 @@ export abstract class BaseAgent {
   protected availableTools: AgentAvailableTool[];
   protected maxSteps: number;
   protected messages: AgentMessage[];
-  protected onStep?: (step: number, content: string, streaming?: boolean) => void;
+  protected onStep?: (step: number, content: AgentStepContent, streaming?: boolean) => void;
 
   constructor(config: AgentConfig) {
     this.llmConfig = config.llmConfig;
@@ -164,7 +148,7 @@ export abstract class BaseAgent {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.llmConfig.apiKey}`,
+          Authorization: `Bearer ${this.llmConfig.apiKey}`,
         },
         body: JSON.stringify(body),
         signal: controller.signal,
@@ -212,13 +196,11 @@ export abstract class BaseAgent {
 
       // Send step update to frontend
       if (this.onStep) {
-        let content = '';
         if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
-          content = `正在调用工具: ${llmResponse.toolCalls.map(tc => tc.name).join(', ')}`;
+          this.onStep(step + 1, { type: 'tool_call', toolCalls: llmResponse.toolCalls }, !llmResponse.toolCalls);
         } else {
-          content = llmResponse.content as string;
+          this.onStep(step + 1, { type: 'assistant_text', content: llmResponse.content as string }, !llmResponse.toolCalls);
         }
-        this.onStep(step + 1, content, !llmResponse.toolCalls);
         // Yield to event loop to allow SSE buffer to flush
         await new Promise(resolve => setImmediate(resolve));
       }
@@ -243,7 +225,11 @@ export abstract class BaseAgent {
           });
           // Send tool result
           if (this.onStep) {
-            this.onStep(step + 1, `工具 ${toolCall.name} 执行完成`, true);
+            this.onStep(step + 1, {
+              type: 'tool_result',
+              toolCallId: toolCall.id,
+              content: JSON.stringify(result),
+            }, true);
             // Yield to event loop to allow SSE buffer to flush
             await new Promise(resolve => setImmediate(resolve));
           }
@@ -256,7 +242,10 @@ export abstract class BaseAgent {
             name: toolCall.name,
           });
           if (this.onStep) {
-            this.onStep(step + 1, `工具 ${toolCall.name} 执行失败: ${(error as Error).message}`, true);
+            this.onStep(step + 1, {
+              type: 'assistant_text',
+              content: `工具 ${toolCall.name} 执行失败: ${(error as Error).message}`,
+            }, true);
             // Yield to event loop to allow SSE buffer to flush
             await new Promise(resolve => setImmediate(resolve));
           }
@@ -267,7 +256,10 @@ export abstract class BaseAgent {
 
     console.warn(`[Agent Debug] Reached maximum steps limit: ${this.maxSteps}`);
     if (this.onStep) {
-      this.onStep(this.maxSteps, `已达到最大步骤数限制 (${this.maxSteps})`, true);
+      this.onStep(this.maxSteps, {
+        type: 'assistant_text',
+        content: `已达到最大步骤数限制 (${this.maxSteps})`,
+      }, true);
       await new Promise(resolve => setImmediate(resolve));
     }
     return {

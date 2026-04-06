@@ -76,7 +76,7 @@ export interface HotTopic {
 
 export interface ChatMessage {
   id: string;
-  role: 'system' | 'user' | 'assistant' | 'tool';
+  role: 'card' | 'user' | 'assistant' | 'tool';
   content: string;
   toolName?: string;
   toolArgs?: Record<string, any>;
@@ -298,4 +298,15 @@ export interface MaterialMetadata {
   imageUrl?: string;
   videoUrl?: string;
   coverUrl?: string;
+}
+
+export type AgentStepContent =
+  | { type: 'assistant_text'; content: string }
+  | { type: 'tool_call'; toolCalls: AgentToolCall[] }
+  | { type: 'tool_result'; toolCallId: string; content: string };
+
+export interface AgentToolCall {
+  id: string;
+  name: string;
+  arguments: Record<string, any>;
 }

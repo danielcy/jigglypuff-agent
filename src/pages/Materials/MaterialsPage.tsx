@@ -416,7 +416,7 @@ const MaterialsPage: React.FC = () => {
                         openCategoryModal(category);
                       }}
                     >
-                      编辑
+                      
                     </Button>
                     <Popconfirm
                       title="确定要删除这个类目吗？删除后类目下所有素材都会被删除，此操作不可撤销。"
@@ -434,7 +434,7 @@ const MaterialsPage: React.FC = () => {
                         icon={<DeleteOutlined />}
                         onClick={e => e.stopPropagation()}
                       >
-                        删除
+                        
                       </Button>
                     </Popconfirm>
                   </div>

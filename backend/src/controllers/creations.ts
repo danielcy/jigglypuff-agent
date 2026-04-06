@@ -4,18 +4,13 @@ import * as llmConfigDao from '../database/llmConfigDao';
 import { getPetById } from '../database/petDao';
 import { agentRegistry, createAgentContext, runAgent } from '../agents';
 import type { Creation, SSEEvent, SSEStepEvent, Pet } from '../types';
-import type { AgentMessage } from '../agents/baseAgent';
+import type { AgentMessage, AgentStepContent } from '../agents/types';
 
 /**
  * Cached active agent execution for reconnect support
  * When user disconnects and reconnects while agent is still running,
  * we can send the cached steps and continue streaming
  */
-interface AgentStepContent {
-  type: 'assistant_text';
-  content: string;
-}
-
 interface CachedStep {
   step: number;
   content: AgentStepContent;

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as materialDao from '../database/materialDao';
 import type { LibraryMaterial } from '../types';
+import { downloadImage } from '../utils/imageDownloader';
 
 export function getMaterials(req: Request, res: Response) {
   try {
@@ -59,7 +60,7 @@ export interface CreateMaterialRequest {
   tags?: string;
 }
 
-export function createMaterial(req: Request, res: Response) {
+export async function createMaterial(req: Request, res: Response) {
   try {
     const data = req.body as CreateMaterialRequest;
     if (!data.name || data.name.trim().length === 0) {
@@ -80,6 +81,26 @@ export function createMaterial(req: Request, res: Response) {
       metadata = JSON.parse(data.metadata || '{}');
     } catch {
       metadata = {};
+    }
+
+    // 下载图片到本地
+    if (metadata.coverUrl || metadata.imageUrl) {
+      const imageUrl = metadata.coverUrl || metadata.imageUrl;
+      // 检查是否已经是本地路径
+      if (!imageUrl.startsWith('/') && imageUrl.includes('http')) {
+        try {
+          const localPath = await downloadImage(imageUrl);
+          if (metadata.coverUrl) {
+            metadata.coverUrl = localPath;
+          } else if (metadata.imageUrl) {
+            metadata.imageUrl = localPath;
+          }
+          console.log(`Image downloaded successfully: ${imageUrl} -> ${localPath}`);
+        } catch (error) {
+          console.error('Failed to download image:', error);
+          // 继续执行，但保留原始URL
+        }
+      }
     }
 
     let tags: string[] = [];
