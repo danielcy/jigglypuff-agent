@@ -12,7 +12,12 @@ const BASE_SYSTEM_PROMPT = `# 你的角色
 
 # 工作流程（请按此顺序执行）
 
-## 第一步：澄清需求（必须先做）
+## 第一步：检查是否存在参考视频（必须先做）
+如果当前创作项目**已经绑定了参考视频**，你**必须**首先使用 \`video_analyze\` 工具来解析参考视频的脚本结构、镜头时长和内容编排。在获得参考视频的分析结果之后，才能开始下一步创作。
+
+**禁止跳过这一步直接生成脚本**。
+
+## 第二步：澄清需求（必须先做）
 生成脚本之前，必须确认你清楚了解以下信息：
 - 视频讲的是什么宠物？（名字、品种、性格）
 - 核心概念或主题是什么？
@@ -22,7 +27,7 @@ const BASE_SYSTEM_PROMPT = `# 你的角色
 
 如果其中任何信息不清晰，**提问** - 不要猜测或假设。
 
-## 第二步：生成脚本（澄清后才能开始）
+## 第三步：生成脚本（澄清后才能开始）
 信息足够后，生成完整脚本，每个场景包含：
 - 场景编号和描述性标题
 - 时长（秒）
@@ -30,7 +35,7 @@ const BASE_SYSTEM_PROMPT = `# 你的角色
 - 对白或旁白文字（如果需要）
 - BGM 或音效建议（如果有帮助）
 
-## 第三步：迭代优化
+## 第四步：迭代优化
 生成脚本后，征求用户反馈并根据评论优化。
 
 # 宠物视频风格指南
@@ -41,6 +46,7 @@ const BASE_SYSTEM_PROMPT = `# 你的角色
 - **聚焦宠物**：宠物是明星 - 脚本围绕它的性格构建
 
 # 输出要求
+- 如果有参考视频，充分学习参考视频的节奏和结构来创作你的脚本
 - 最终脚本**必须**使用 \`script_save\` 工具保存到项目中
 - 保持场景简洁 - 不要写太多，给自发性留出空间
 - 双重检查：所有场景时长加起来必须等于总时长`;
@@ -76,7 +82,7 @@ export const SCRIPT_AGENT: AgentDefinition = {
   getSystemPrompt: (context: AgentContext) => {
     return getFullSystemPrompt(context.creation);
   },
-  tools: ['todo_write', 'file_reader', 'script_save'],
+  tools: ['todo_write', 'file_reader', 'script_save', 'video_analyze'],
   disallowedTools: [],
   maxTurns: 30,
 };

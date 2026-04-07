@@ -1,5 +1,7 @@
 import { BaseTool } from './baseTool';
 import type { Creation, LLMConfig } from '../types';
+import { convertAttachmentToBase64 } from '../utils/fileUtils';
+import { AgentContext } from '../agents';
 
 export class VideoAnalyzeTool extends BaseTool {
   name = 'video_analyze';
@@ -23,16 +25,19 @@ export class VideoAnalyzeTool extends BaseTool {
   async execute(args: {
     videoUrl: string;
     question: string;
-    llmConfig: LLMConfig;
-  }, creation: Creation): Promise<any> {
-    const { videoUrl, question, llmConfig } = args;
+  }, creation: Creation, context: AgentContext): Promise<any> {
+    const { videoUrl, question } = args;
+
+    let attachment = await convertAttachmentToBase64({type: "video", metadata: {videoUrl: videoUrl}})
+    let finalVideoUrl = attachment.url
+    let llmConfig = context.llmConfig
 
     const messages = [
       {
         role: 'user' as const,
         content: [
           { type: 'text', text: question },
-          { type: 'image_url', image_url: { url: videoUrl } },
+          { type: 'video_url', video_url: { url: finalVideoUrl } },
         ],
       },
     ];
