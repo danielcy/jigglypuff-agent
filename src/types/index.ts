@@ -76,7 +76,7 @@ export interface HotTopic {
 
 export interface ChatMessage {
   id: string;
-  role: 'card' | 'user' | 'assistant' | 'tool';
+  role: 'card' | 'user' | 'assistant' | 'tool' | 'system';
   content: string;
   toolName?: string;
   toolArgs?: Record<string, any>;

@@ -194,6 +194,9 @@ export const useCreationChat = ({ creationId, agentType, initialMessages, onComp
       console.log('[Chat SSE] Setting initial messages:', initialMessages);
       setMessages(initialMessages);
     }
+    if (initialMessages && initialMessages.length == 0 && messages.length != 0) {
+      setMessages([]);
+    }
   }, [initialMessages]);
 
   const sendMessage = async (message: string, attachments?: LibraryMaterial[]): Promise<void> => {
