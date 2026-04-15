@@ -13,13 +13,15 @@ import {
   Image,
   Row,
   Col,
+  Select,
 } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import type { Creation, HotVideoAnalysis, Script, ShotList, CreationProduct } from '../../../types';
+import type { Creation, HotVideoAnalysis, Script, ShotList, CreationProduct, Pet } from '../../../types';
 import styles from './ProjectDetail.module.css';
 
 const { TextArea } = Input;
 const { Text } = Typography;
+const { Option } = Select;
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
@@ -35,12 +37,14 @@ interface ProjectDetailProps {
   creation: Creation;
   onUpdate: (updates: Partial<Creation>) => Promise<void>;
   loading: boolean;
+  pets: Pet[];
 }
 
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   creation,
   onUpdate,
   loading,
+  pets,
 }) => {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
@@ -51,6 +55,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     form.setFieldsValue({
       title: creation.title,
       content: creation.content || '',
+      petIds: creation.petIds || [],
     });
   }, [creation.id, form, creation]);
 
@@ -91,6 +96,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       await onUpdate({
         title: values.title,
         content: values.content,
+        petIds: values.petIds,
       });
     } finally {
       setSaving(false);
@@ -715,6 +721,23 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               rules={[{ required: true, message: '请输入项目标题' }]}
             >
               <Input placeholder="输入项目标题" />
+            </Form.Item>
+            <Form.Item
+              name="petIds"
+              label="关联宠物"
+            >
+              <Select
+                mode="multiple"
+                placeholder="选择关联的宠物"
+                allowClear
+                style={{ width: '100%' }}
+              >
+                {pets.map(pet => (
+                  <Option key={pet.id} value={pet.id}>
+                    {pet.name}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
             <Form.Item name="content" label="备注">
               <TextArea rows={6} placeholder="添加项目备注..." />

@@ -367,6 +367,8 @@ export async function runAgent(
     existingChatHistory.forEach(msg => {
       if (msg.role === 'system') return; // Skip system messages, already have system prompt
 
+      if (!msg.content || msg.content.trim().length === 0) return; // Skip empty messages
+
       if (msg.role === 'tool' && msg.toolName) {
         // Tool message - convert to AgentMessage
         messages.push({

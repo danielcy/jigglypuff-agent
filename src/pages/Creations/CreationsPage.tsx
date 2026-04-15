@@ -162,6 +162,7 @@ const CreationsPage: React.FC = () => {
                 creation={selectedCreation}
                 onUpdate={handleUpdate}
                 loading={loading}
+                pets={pets}
               />
             </div>
             <div className={styles.chat}>
